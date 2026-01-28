@@ -11,28 +11,24 @@
 
 <div class="container">
 
-  <!-- Header -->
   <div class="header">
     <h1>Injective Dashboard</h1>
   </div>
 
-  <!-- Address Input -->
   <input type="text" id="addressInput" placeholder="Inserisci indirizzo INJ">
 
   <div class="cards-wrapper">
 
-    <!-- INJ Price Card -->
     <div class="card price-card">
       <div class="label">INJ Price</div>
       <div class="value-row">
-        <span id="price">$0.0000</span>
+        <span id="price">0.0000</span>
       </div>
       <div class="sub-row">
         <span id="price24h" class="sub">±0.00%</span>
       </div>
       <div class="price-bar-container">
         <div id="priceBar" class="price-bar"></div>
-        <div id="priceLineOpen" class="price-line-open"></div>
         <div id="priceLineCurrent" class="price-line-current"></div>
       </div>
       <div class="price-values">
@@ -42,7 +38,6 @@
       </div>
     </div>
 
-    <!-- Available Card -->
     <div class="card available-card">
       <div class="label">INJ Balance</div>
       <div class="value-row">
@@ -53,7 +48,6 @@
       </div>
     </div>
 
-    <!-- Staked Card -->
     <div class="card stake-card">
       <div class="label">Staked</div>
       <div class="value-row">
@@ -64,7 +58,6 @@
       </div>
     </div>
 
-    <!-- Rewards Card -->
     <div class="card reward-card">
       <div class="label">Rewards</div>
       <div class="value-row">
@@ -79,7 +72,6 @@
       </div>
     </div>
 
-    <!-- APR Card -->
     <div class="card apr-card">
       <div class="label">APR</div>
       <div class="value-row">
@@ -87,7 +79,6 @@
       </div>
     </div>
 
-    <!-- Chart Card -->
     <div class="card chart-card">
       <div class="label">Grafico 24h</div>
       <canvas id="priceChart"></canvas>
@@ -95,7 +86,6 @@
 
   </div>
 
-  <!-- Last Update -->
   <div id="updated" class="last-update">Last Update: --:--:--</div>
 
 </div>
