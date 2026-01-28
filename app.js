@@ -60,7 +60,7 @@ setInterval(loadAccount,60000);
 /* HISTORY */
 async function fetchHistory(){
   const d = await fetchJSON(
-    "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=5m&limit=288"
+    "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=1h&limit=24"
   );
   chartData = d.map(c=>+c[4]);
   price24hOpen = +d[0][1];
@@ -70,7 +70,6 @@ async function fetchHistory(){
   if(!chart) initChart();
 }
 fetchHistory();
-setInterval(fetchHistory, 300000);
 
 /* CHART */
 function initChart(){
@@ -97,14 +96,6 @@ function updateChart(p){
 function startWS(){
   if(ws) ws.close();
   ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  
-  ws.onopen = () => updateOnlineStatus(true);
-  ws.onclose = () => {
-    updateOnlineStatus(false);
-    setTimeout(startWS,3000);
-  }
-  ws.onerror = () => updateOnlineStatus(false);
-
   ws.onmessage=e=>{
     const p=+JSON.parse(e.data).p;
     targetPrice=p;
@@ -112,32 +103,14 @@ function startWS(){
     price24hLow=Math.min(price24hLow,p);
     updateChart(p);
   };
+  ws.onclose=()=>setTimeout(startWS,3000);
 }
 startWS();
-
-/* ONLINE/OFFLINE */
-function updateOnlineStatus(online){
-  let dot = document.querySelector(".online-dot");
-  if(!dot){
-    dot=document.createElement("div");
-    dot.className="online-dot";
-    document.body.appendChild(dot);
-  }
-  if(online){
-    dot.textContent="ONLINE";
-    dot.style.backgroundColor="#22c55e";
-    dot.style.animation="blink 1.5s infinite";
-  } else {
-    dot.textContent="OFFLINE";
-    dot.style.backgroundColor="#ef4444";
-    dot.style.animation="none";
-  }
-}
 
 /* ANIMATION LOOP */
 function animate(){
   const old=displayedPrice;
-  displayedPrice=lerp(displayedPrice,targetPrice,0.05);
+  displayedPrice=lerp(displayedPrice,targetPrice,0.1);
   colorNumber($("price"),displayedPrice,old,4);
 
   const d=((displayedPrice-price24hOpen)/price24hOpen)*100;
@@ -165,25 +138,6 @@ function animate(){
 
   $("apr").textContent=apr.toFixed(2)+"%";
   $("updated").textContent="Last update: "+new Date().toLocaleTimeString();
-
-  // ------------------------
-  // BARRA PREZZO CENTRATA
-  // ------------------------
-  const priceRange = price24hHigh - price24hLow;
-  if(priceRange>0){
-    const percent = (displayedPrice - price24hOpen) / priceRange * 50;
-    if(displayedPrice>=price24hOpen){
-      $("priceBarGreen").style.left="50%";
-      $("priceBarGreen").style.width = Math.min(percent*2,50)+"%";
-      $("priceBarRed").style.width="0%";
-    } else {
-      $("priceBarRed").style.left = 50 + percent + "%";
-      $("priceBarRed").style.width = Math.min(-percent*2,50)+"%";
-      $("priceBarGreen").style.width="0%";
-    }
-    const linePercent = ((displayedPrice - price24hLow)/priceRange)*100;
-    $("priceLine").style.left = linePercent + "%";
-  }
 
   requestAnimationFrame(animate);
 }
