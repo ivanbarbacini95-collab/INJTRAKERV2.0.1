@@ -84,6 +84,7 @@ body {
 .value-row { display: flex; justify-content: flex-end; font-size: 1.4rem; font-weight: bold; }
 .sub-row { display: flex; justify-content: flex-end; font-size: 0.9rem; color: #9ca3af; }
 
+/* --- Barra del prezzo e valori aggiornati --- */
 .price-bar-container {
   position: relative;
   height: 24px;
@@ -115,11 +116,23 @@ body {
   transition: left 0.2s linear;
 }
 
-.price-values { position: relative; margin-top: 6px; font-size: 0.8rem; height: 20px; }
-.price-extremes { color: #f9fafb; font-weight: bold; }
-.price-extremes.left { position: absolute; left: 0; }
-.price-extremes.center { position: absolute; left: 50%; transform: translateX(-50%); }
+/* Valori min, open e max - font piccolo come le altre card */
+.price-values {
+  position: relative;
+  margin-top: 6px;
+  font-size: 0.8rem; /* come valori USD nelle altre card */
+  color: #9ca3af;    /* colore grigio chiaro */
+  height: 20px;
+}
+
+.price-extremes {
+  font-weight: bold; /* mantiene il bold */
+}
+
+.price-extremes.left  { position: absolute; left: 0; }
+.price-extremes.center{ position: absolute; left: 50%; transform: translateX(-50%); }
 .price-extremes.right { position: absolute; right: 0; }
+
 
 .reward-bar-container {
   background: #111827;
@@ -165,3 +178,4 @@ body {
 }
 
 @media (max-width: 768px) { .cards-wrapper { flex-direction: column; } }
+
