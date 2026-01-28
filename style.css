@@ -19,17 +19,20 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  text-align: center;
 }
 
 .header h1 {
   font-size: 1.9rem;
   font-weight: 800;
-  color: #f9fafb;
+  background: linear-gradient(90deg, #22c55e, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
 
 .header .dot {
-  color: #0ea5e9; /* azzurro */
+  color: #0ea5e9;
   display: inline-block;
   margin: 0 0.3rem;
   animation: pulseDot 1.2s infinite ease-in-out;
@@ -69,7 +72,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
-.label { font-weight: bold; font-size: 1.2rem; }
+.card .label { font-weight: bold; font-size: 1.2rem; }
 .value-row { display: flex; justify-content: flex-end; font-size: 1.4rem; font-weight: bold; }
 .sub-row { display: flex; justify-content: flex-end; font-size: 0.9rem; color: #9ca3af; }
 
@@ -101,54 +104,4 @@ body {
   width: 2px;
   background: #facc15;
   left: 50%;
-  transform: translateX(-50%);
-  transition: left 0.2s linear;
-}
-
-.price-values { position: relative; margin-top: 6px; font-size: 0.8rem; height: 20px; color:#9ca3af;}
-.price-extremes { font-weight: bold; }
-.price-extremes.left { position: absolute; left: 0; }
-.price-extremes.center { position: absolute; left: 50%; transform: translateX(-50%); }
-.price-extremes.right { position: absolute; right: 0; }
-
-/* REWARD BAR */
-.reward-bar-container {
-  background: #111827;
-  height: 24px;
-  border-radius: 0.3rem;
-  position: relative;
-  margin-top: 0.5rem;
-  overflow: hidden;
-}
-
-.reward-bar {
-  background: linear-gradient(to right, #0ea5e9, #3b82f6);
-  height: 100%;
-  width: 0%;
-  border-radius: 0.3rem;
-  transition: width 0.3s linear;
-}
-
-.reward-percent {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 0.85rem;
-  color: #f9fafb;
-  font-weight: bold;
-}
-
-/* CHART */
-.chart-card { min-height: 250px; height: 300px; position: relative; }
-#priceChart { width: 100% !important; height: 100% !important; }
-
-/* MISC */
-.up { color: #22c55e; transition: color 0.3s; }
-.down { color: #ef4444; transition: color 0.3s; }
-
-.last-update { font-size: 0.8rem; text-align: center; margin-top: 0.5rem; color: #9ca3af; }
-
-@media (max-width: 768px) { 
-  .cards-wrapper { flex-direction: column; } 
-}
+  transform: translate
