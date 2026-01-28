@@ -1,3 +1,4 @@
+/* GENERALE */
 body {
   font-family: Inter, sans-serif;
   background: #000;
@@ -95,14 +96,15 @@ body {
 .price-bar {
   position: absolute;
   height: 100%;
-  background: linear-gradient(to right, #22c55e, #10b981);
+  width: 0;
+  background: #22c55e; /* verde iniziale */
 }
 
 .price-line {
   position: absolute;
   width: 2px;
   height: 100%;
-  background: #facc15;
+  background: #facc15; /* giallo */
 }
 
 .price-values {
@@ -127,7 +129,9 @@ body {
 
 .reward-bar {
   height: 100%;
+  width: 0;
   background: linear-gradient(to right, #0ea5e9, #3b82f6);
+  transition: width 0.3s ease;
 }
 
 .reward-percent {
