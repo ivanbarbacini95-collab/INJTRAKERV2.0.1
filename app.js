@@ -14,7 +14,6 @@ let chart, chartData = [];
 // Elementi DOM
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
-const priceArrowEl = document.getElementById("priceArrow");
 const price24hEl = document.getElementById("price24h");
 const priceBarEl = document.getElementById("priceBar");
 const priceLineEl = document.getElementById("priceLine");
@@ -101,50 +100,19 @@ function startWS(){
 }
 startWS();
 
-// ==== Animate numbers cifra per cifra ====
-let prevValues = {price:0, available:0, stake:0, rewards:0, apr:0};
-
-function animateNumber(el, target, key, decimals=4){
-  const current = prevValues[key];
-  const diff = target - current;
-  const step = diff / 5;
-  if(Math.abs(diff)<0.00001) return target;
-  let i = 0;
-  function animateStep(){
-    if(i>=5) return;
-    const val = prevValues[key] + step;
-    el.innerText = val.toFixed(decimals);
-    el.style.color = step>0?"#22c55e":step<0?"#ef4444":"#f9fafb";
-    prevValues[key] = val;
-    i++;
-    requestAnimationFrame(animateStep);
-  }
-  animateStep();
-  return target;
-}
-
-// Animate loop
+// Update numbers and bars
 function animate(){
+  const lerp = (a,b,f)=>a+(b-a)*f;
+
   // Price
-  displayedPrice = animateNumber(priceEl, targetPrice, "price", 4);
+  displayedPrice = lerp(displayedPrice,targetPrice,0.1);
+  priceEl.innerText = displayedPrice.toFixed(4);
 
-  // Freccia prezzo
-  if(targetPrice>prevValues.price){
-    priceArrowEl.className = "price-arrow up";
-    priceArrowEl.innerText = "▲";
-  } else if(targetPrice<prevValues.price){
-    priceArrowEl.className = "price-arrow down";
-    priceArrowEl.innerText = "▼";
-  } else {
-    priceArrowEl.style.opacity = 0;
-  }
-
-  // 24h %
   const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
   price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
   price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
 
-  // Barra prezzo
+  // Barra prezzo dal centro con linea gialla
   const center=50;
   const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
   let linePos;
@@ -166,20 +134,27 @@ function animate(){
   priceMaxEl.innerText=price24hHigh.toFixed(4);
   priceOpenEl.innerText=price24hOpen.toFixed(4);
 
-  // Altri numeri
-  displayedAvailable = animateNumber(availableEl, availableInj, "available", 6);
-  availableUsdEl.innerText = (displayedAvailable*displayedPrice).toFixed(2);
+  // Available
+  displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
+  availableEl.innerText=displayedAvailable.toFixed(6);
+  availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
-  displayedStake = animateNumber(stakeEl, stakeInj, "stake", 4);
-  stakeUsdEl.innerText = (displayedStake*displayedPrice).toFixed(2);
+  // Stake
+  displayedStake=lerp(displayedStake,stakeInj,0.1);
+  stakeEl.innerText=displayedStake.toFixed(4);
+  stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
-  displayedRewards = animateNumber(rewardsEl, rewardsInj, "rewards", 6);
-  rewardsUsdEl.innerText = (displayedRewards*displayedPrice).toFixed(2);
+  // Rewards
+  displayedRewards=lerp(displayedRewards,rewardsInj,0.05);
+  rewardsEl.innerText=displayedRewards.toFixed(6);
+  rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
 
+  // Barra reward
   const rewardPercent = Math.min(displayedRewards/0.05*100,100);
   rewardBarEl.style.width=rewardPercent+"%";
 
-  apr = animateNumber(aprEl, apr, "apr", 2);
+  // APR
+  aprEl.innerText=apr.toFixed(2)+"%";
 
   // Last update
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
