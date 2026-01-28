@@ -52,20 +52,16 @@ async function loadData() {
   if(!address) return;
 
   try {
-    // Available
     const balanceRes = await fetchJSON(`https://lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`);
     const injBalance = balanceRes.balances?.find(b => b.denom === "inj");
     availableInj = injBalance ? Number(injBalance.amount)/1e18 : 0;
 
-    // Staking
     const stakeRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/delegations/${address}`);
     stakeInj = stakeRes.delegation_responses?.reduce((sum,d) => sum + Number(d.balance.amount||0),0)/1e18 || 0;
 
-    // Rewards
     const rewardsRes = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
     rewardsInj = rewardsRes.rewards?.reduce((sum,r)=>sum+Number(r.reward[0]?.amount||0),0)/1e18||0;
 
-    // APR
     const inflationRes = await fetchJSON(`https://lcd.injective.network/cosmos/mint/v1beta1/inflation`);
     const poolRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
     const bonded = Number(poolRes.pool?.bonded_tokens||0);
@@ -151,19 +147,16 @@ function animate(){
   const pricePercent = (displayedPrice - price24hLow)/range*100;
 
   if(displayedPrice>=price24hOpen){
-    // sopra apertura -> verde verso destra
     priceBarEl.style.left = "50%";
     priceBarEl.style.width = (pricePercent-50) + "%";
     priceBarEl.style.background = "#22c55e";
   } else {
-    // sotto apertura -> rosso verso sinistra
     const width = (50 - pricePercent);
     priceBarEl.style.left = pricePercent + "%";
     priceBarEl.style.width = width + "%";
     priceBarEl.style.background = "#ef4444";
   }
 
-  // linea gialla che trascina
   priceLineEl.style.left = pricePercent + "%";
 
   // ---- Min / Open / Max ----
@@ -186,7 +179,6 @@ function animate(){
   animateNumberCifre(rewardsEl, displayedRewards, displayedRewards, 6);
   animateNumberCifre(rewardsUsdEl, displayedRewards*displayedPrice, displayedRewards*displayedPrice, 2);
 
-  // Barra reward
   const rewardPercent = Math.min(displayedRewards/rewardMax*100,100);
   rewardBarEl.style.width = rewardPercent+"%";
   rewardPercentEl.innerText = rewardPercent.toFixed(1)+"%";
