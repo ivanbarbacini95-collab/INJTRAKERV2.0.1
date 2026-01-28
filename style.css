@@ -132,8 +132,14 @@ body {
   color: #9ca3af;
 }
 
-.up { color: #22c55e !important; }
-.down { color: #ef4444 !important; }
+/* flash SOLO quando cambia il valore */
+.up {
+  color: #22c55e !important;
+}
+
+.down {
+  color: #ef4444 !important;
+}
 
 @media (max-width: 768px) {
   .cards-wrapper {
