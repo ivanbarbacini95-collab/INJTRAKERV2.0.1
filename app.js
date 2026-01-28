@@ -1,5 +1,5 @@
 // -----------------------------
-// Injective Dashboard JS
+// Injective Dashboard JS (animazione solo numeri che cambiano)
 // -----------------------------
 
 // Recupera indirizzo salvato
@@ -133,21 +133,23 @@ function startWS() {
 startWS();
 
 // -----------------------------
-// Animate all values
+// Animate values solo se cambiano
 // -----------------------------
 function animate() {
+    // Lerping helper
     const lerp = (a,b,f) => a + (b-a)*f;
 
-    // Helper: animazione con flash colore
-    function animateValueWithFlash(el, current, target, decimals = 2, flashDuration = 500) {
+    // Helper: anima solo se cambia
+    function animateValueIfChanged(el, current, target, decimals=2, flashDuration=500) {
+        if (current === target) return current; // niente da fare
         const lerpVal = current + (target - current) * 0.1;
         el.innerText = lerpVal.toFixed(decimals);
 
-        if(target > current) {
+        if (target > current) {
             el.classList.add("up");
             el.classList.remove("down");
             setTimeout(()=>el.classList.remove("up"), flashDuration);
-        } else if(target < current) {
+        } else if (target < current) {
             el.classList.add("down");
             el.classList.remove("up");
             setTimeout(()=>el.classList.remove("down"), flashDuration);
@@ -157,11 +159,10 @@ function animate() {
     }
 
     // --- PRICE ---
-    displayedPrice = animateValueWithFlash(priceEl, displayedPrice, targetPrice, 4);
-
-    const delta = ((displayedPrice - price24hOpen) / price24hOpen) * 100;
-    price24hEl.innerText = (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
-    price24hEl.className = "sub " + (delta > 0 ? "up" : delta < 0 ? "down" : "");
+    displayedPrice = animateValueIfChanged(priceEl, displayedPrice, targetPrice, 4);
+    const delta = ((displayedPrice - price24hOpen)/price24hOpen)*100;
+    price24hEl.innerText = (delta >=0 ? "▲ ":"▼ ") + Math.abs(delta).toFixed(2) + "%";
+    price24hEl.className = "sub " + (delta > 0 ? "up" : delta <0 ? "down" : "");
 
     const center = 50;
     const percent = Math.min(Math.abs(displayedPrice - price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
@@ -184,26 +185,26 @@ function animate() {
     priceOpenEl.innerText = price24hOpen.toFixed(4);
 
     // --- AVAILABLE ---
-    displayedAvailable = animateValueWithFlash(availableEl, displayedAvailable, availableInj, 6);
-    availableUsdEl.innerText = (displayedAvailable * displayedPrice).toFixed(2);
+    displayedAvailable = animateValueIfChanged(availableEl, displayedAvailable, availableInj, 6);
+    availableUsdEl.innerText = (displayedAvailable*displayedPrice).toFixed(2);
 
     // --- STAKE ---
-    displayedStake = animateValueWithFlash(stakeEl, displayedStake, stakeInj, 4);
-    stakeUsdEl.innerText = (displayedStake * displayedPrice).toFixed(2);
+    displayedStake = animateValueIfChanged(stakeEl, displayedStake, stakeInj, 4);
+    stakeUsdEl.innerText = (displayedStake*displayedPrice).toFixed(2);
 
     // --- REWARDS ---
-    displayedRewards = animateValueWithFlash(rewardsEl, displayedRewards, rewardsInj, 6);
-    rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
+    displayedRewards = animateValueIfChanged(rewardsEl, displayedRewards, rewardsInj, 6);
+    rewardsUsdEl.innerText = (displayedRewards*displayedPrice).toFixed(2);
 
     const rewardPercent = Math.min(displayedRewards / 0.1 * 100, 100);
     rewardBarEl.style.width = rewardPercent + "%";
     rewardPercentEl.innerText = rewardPercent.toLocaleString('it-IT',{minimumFractionDigits:2, maximumFractionDigits:2})+"%";
 
     // --- APR ---
-    aprEl.innerText = apr.toFixed(2) + "%";
+    aprEl.innerText = apr.toFixed(2)+"%";
 
     // --- LAST UPDATE ---
-    updatedEl.innerText = "Last Update: " + new Date().toLocaleTimeString();
+    updatedEl.innerText = "Last Update: "+new Date().toLocaleTimeString();
 
     requestAnimationFrame(animate);
 }
