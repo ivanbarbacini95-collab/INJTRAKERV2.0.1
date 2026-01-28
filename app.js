@@ -60,7 +60,7 @@ setInterval(loadAccount,60000);
 /* HISTORY */
 async function fetchHistory(){
   const d = await fetchJSON(
-    "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=5m&limit=288" // 24h/5min
+    "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=5m&limit=288"
   );
   chartData = d.map(c=>+c[4]);
   price24hOpen = +d[0][1];
@@ -70,7 +70,7 @@ async function fetchHistory(){
   if(!chart) initChart();
 }
 fetchHistory();
-setInterval(fetchHistory, 300000); // aggiorna ogni 5min
+setInterval(fetchHistory, 300000);
 
 /* CHART */
 function initChart(){
@@ -121,18 +121,6 @@ function updateOnlineStatus(online){
   if(!dot){
     dot=document.createElement("div");
     dot.className="online-dot";
-    dot.style.position="absolute";
-    dot.style.top="1rem";
-    dot.style.right="1rem";
-    dot.style.width="12px";
-    dot.style.height="12px";
-    dot.style.borderRadius="50%";
-    dot.style.fontSize="10px";
-    dot.style.color="#fff";
-    dot.style.display="flex";
-    dot.style.alignItems="center";
-    dot.style.justifyContent="center";
-    dot.style.paddingLeft="1.5rem";
     document.body.appendChild(dot);
   }
   if(online){
@@ -149,7 +137,7 @@ function updateOnlineStatus(online){
 /* ANIMATION LOOP */
 function animate(){
   const old=displayedPrice;
-  displayedPrice=lerp(displayedPrice,targetPrice,0.05); // più lento
+  displayedPrice=lerp(displayedPrice,targetPrice,0.05);
   colorNumber($("price"),displayedPrice,old,4);
 
   const d=((displayedPrice-price24hOpen)/price24hOpen)*100;
@@ -183,13 +171,13 @@ function animate(){
   // ------------------------
   const priceRange = price24hHigh - price24hLow;
   if(priceRange>0){
-    const percent = (displayedPrice - price24hOpen) / priceRange * 50; // metà container
+    const percent = (displayedPrice - price24hOpen) / priceRange * 50;
     if(displayedPrice>=price24hOpen){
       $("priceBarGreen").style.left="50%";
       $("priceBarGreen").style.width = Math.min(percent*2,50)+"%";
       $("priceBarRed").style.width="0%";
     } else {
-      $("priceBarRed").style.left = 50 + percent + "%"; // percent è negativo
+      $("priceBarRed").style.left = 50 + percent + "%";
       $("priceBarRed").style.width = Math.min(-percent*2,50)+"%";
       $("priceBarGreen").style.width="0%";
     }
