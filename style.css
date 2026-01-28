@@ -126,14 +126,4 @@ body {
 .up { color: #22c55e; transition: color 0.3s; }
 .down { color: #ef4444; transition: color 0.3s; }
 
-/* Freccia prezzo */
-.price-arrow {
-  margin-left: 6px;
-  font-size: 1.2rem;
-  transition: opacity 0.3s;
-  opacity: 0;
-}
-.price-arrow.up { color: #22c55e; opacity: 1; }
-.price-arrow.down { color: #ef4444; opacity: 1; }
-
 @media (max-width: 768px) { .cards-wrapper { flex-direction: column; } }
