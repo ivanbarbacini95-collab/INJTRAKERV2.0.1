@@ -12,6 +12,7 @@ let chart, chartData = [], ws;
 const $ = id => document.getElementById(id);
 const lerp = (a,b,f)=>a+(b-a)*f;
 
+/* Funzione per colorare solo le cifre cambiate */
 function colorNumber(el, n, o, d){
   const ns=n.toFixed(d), os=o.toFixed(d);
   el.innerHTML=[...ns].map((c,i)=>
@@ -26,7 +27,7 @@ async function fetchJSON(url){
   catch{ return {}; }
 }
 
-/* ADDRESS */
+/* INPUT ADDRESS */
 $("addressInput").value = address;
 $("addressInput").onchange = e=>{
   address=e.target.value.trim();
@@ -34,7 +35,7 @@ $("addressInput").onchange = e=>{
   loadAccount();
 };
 
-/* ACCOUNT */
+/* ACCOUNT COMPLETO */
 async function loadAccount(){
   if(!address) return;
 
@@ -51,21 +52,18 @@ async function loadAccount(){
 
   const newRewards = (r.rewards||[]).reduce((a,v)=>a+v.reward.reduce((s,x)=>s+Number(x.amount),0),0)/1e18;
 
-  // Evidenzia in verde se crescono
   if(newRewards > rewardsInj){
     rewardsInj = newRewards;
-    $("rewards").classList.add("up");
-    setTimeout(()=> $("rewards").classList.remove("up"), 1000);
   }
 
   apr = Number(i.inflation||0)*100;
 }
 
-// Aggiornamento account completo ogni 60s
+/* Aggiornamenti */
 loadAccount();
-setInterval(loadAccount, 60000);
+setInterval(loadAccount, 60000); // account completo ogni 60s
 
-// Aggiornamento solo rewards ogni 2 secondi
+/* Aggiornamento solo rewards ogni 2s */
 setInterval(async ()=>{
   if(!address) return;
   const r = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
@@ -73,8 +71,6 @@ setInterval(async ()=>{
 
   if(newRewards > rewardsInj){
     rewardsInj = newRewards;
-    $("rewards").classList.add("up");
-    setTimeout(()=> $("rewards").classList.remove("up"), 1000);
   }
 }, 2000);
 
@@ -129,7 +125,7 @@ function setConnectionStatus(online){
 }
 setConnectionStatus(false);
 
-/* WS */
+/* WEBSOCKET */
 function startWS(){
   if(ws) ws.close();
   ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
@@ -166,7 +162,6 @@ function updatePriceBar() {
   linePercent = Math.max(0,Math.min(100,linePercent));
   $("priceLine").style.left = linePercent + "%";
 
-  // Gradiente dinamico
   if(price >= open){
     $("priceBar").style.background = "linear-gradient(to right, #22c55e, #10b981)";
   } else {
@@ -199,9 +194,10 @@ $("claimRewards").onclick = ()=>{
 
 /* ANIMATION LOOP */
 function animate(){
-  const old=displayedPrice;
-  displayedPrice=lerp(displayedPrice,targetPrice,0.1);
-  colorNumber($("price"),displayedPrice,old,4);
+  // PRICE
+  const oldPrice = displayedPrice;
+  displayedPrice = lerp(displayedPrice, targetPrice, 0.1);
+  colorNumber($("price"), displayedPrice, oldPrice, 4);
 
   const d=((displayedPrice-price24hOpen)/price24hOpen)*100;
   $("price24h").textContent=`${d>0?"▲":"▼"} ${Math.abs(d).toFixed(2)}%`;
@@ -213,23 +209,36 @@ function animate(){
 
   updatePriceBar();
 
+  // AVAILABLE
+  const oldAvailable = displayedAvailable;
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
-  colorNumber($("available"),displayedAvailable,availableInj,6);
+  colorNumber($("available"), displayedAvailable, oldAvailable, 6);
   $("availableUsd").textContent=`≈ $${(displayedAvailable*displayedPrice).toFixed(2)}`;
 
+  // STAKE
+  const oldStake = displayedStake;
   displayedStake=lerp(displayedStake,stakeInj,0.1);
-  colorNumber($("stake"),displayedStake,stakeInj,4);
+  colorNumber($("stake"), displayedStake, oldStake, 4);
   $("stakeUsd").textContent=`≈ $${(displayedStake*displayedPrice).toFixed(2)}`;
 
+  // REWARDS
+  const oldRewards = displayedRewards;
   displayedRewards=lerp(displayedRewards,rewardsInj,0.1);
-  colorNumber($("rewards"),displayedRewards,rewardsInj,7);
+  colorNumber($("rewards"), displayedRewards, oldRewards, 7);
   $("rewardsUsd").textContent=`≈ $${(displayedRewards*displayedPrice).toFixed(2)}`;
+  if(displayedRewards > oldRewards){
+    $("rewards").classList.add("up");
+    setTimeout(()=> $("rewards").classList.remove("up"), 1000);
+  }
 
   $("rewardBar").style.background = "linear-gradient(to right, #0ea5e9, #3b82f6)";
   $("rewardBar").style.width = Math.min(displayedRewards/0.05*100,100)+"%";
   $("rewardPercent").textContent=(displayedRewards/0.05*100).toFixed(1)+"%";
 
+  // APR
   $("apr").textContent=apr.toFixed(2)+"%";
+
+  // LAST UPDATE
   $("updated").textContent="Last update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
