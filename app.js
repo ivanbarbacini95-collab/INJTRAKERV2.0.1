@@ -172,26 +172,22 @@ function animate(){
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
-  // --- BARRA PREZZO ---
+  // --- BARRA PREZZO DIVISA ---
   const priceRange = price24hHigh - price24hLow;
-  const centerPercent = ((price24hOpen - price24hLow)/priceRange) * 100;
-  const currentPercent = ((displayedPrice - price24hLow)/priceRange) * 100;
+  const centerPercent = ((price24hOpen - price24hLow)/priceRange)*100;
+  const currentPercent = ((displayedPrice - price24hLow)/priceRange)*100;
 
   if(displayedPrice >= price24hOpen){
-    $("priceLine").style.left = currentPercent + "%";
-    $("priceLine").style.background = "#facc15";
-
-    $("priceBar").style.left = centerPercent + "%";
-    $("priceBar").style.width = (currentPercent - centerPercent) + "%";
-    $("priceBar").style.background = "linear-gradient(to right, #22c55e, #10b981)";
+    $("priceBarGreen").style.left = centerPercent + "%";
+    $("priceBarGreen").style.width = (currentPercent - centerPercent) + "%";
+    $("priceBarRed").style.width = "0%";
   } else {
-    $("priceLine").style.left = currentPercent + "%";
-    $("priceLine").style.background = "#f87171";
-
-    $("priceBar").style.left = currentPercent + "%";
-    $("priceBar").style.width = (centerPercent - currentPercent) + "%";
-    $("priceBar").style.background = "linear-gradient(to left, #ef4444, #f87171)";
+    $("priceBarRed").style.left = currentPercent + "%";
+    $("priceBarRed").style.width = (centerPercent - currentPercent) + "%";
+    $("priceBarGreen").style.width = "0%";
   }
+
+  $("priceLine").style.left = currentPercent + "%";
 
   // --- AVAILABLE/STAKED/REWARDS ---
   displayedAvailable = lerp(displayedAvailable,availableInj,0.05);
