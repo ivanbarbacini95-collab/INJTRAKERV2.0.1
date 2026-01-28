@@ -14,12 +14,18 @@ const lerp = (a,b,f)=>a+(b-a)*f;
 
 /* Funzione per colorare solo le cifre cambiate */
 function colorNumber(el, n, o, d){
-  const ns=n.toFixed(d), os=o.toFixed(d);
-  el.innerHTML=[...ns].map((c,i)=>
-    c!==os[i]
-      ? `<span style="color:${n>o?'#22c55e':'#ef4444'}">${c}</span>`
-      : `<span>${c}</span>`
-  ).join("");
+  const ns = n.toFixed(d);
+  const os = o.toFixed(d);
+
+  el.innerHTML = [...ns].map((c,i) => {
+    if(c !== os[i]){
+      // cifra cambiata: verde se aumento, rosso se diminuzione
+      return `<span style="color:${n>o?'#22c55e':'#ef4444'}">${c}</span>`;
+    } else {
+      // cifra uguale: colore neutro
+      return `<span style="color:#f9fafb">${c}</span>`;
+    }
+  }).join("");
 }
 
 async function fetchJSON(url){
@@ -51,7 +57,6 @@ async function loadAccount(){
     .reduce((a,d)=>a+Number(d.balance.amount),0)/1e18;
 
   const newRewards = (r.rewards||[]).reduce((a,v)=>a+v.reward.reduce((s,x)=>s+Number(x.amount),0),0)/1e18;
-
   if(newRewards > rewardsInj){
     rewardsInj = newRewards;
   }
@@ -68,7 +73,6 @@ setInterval(async ()=>{
   if(!address) return;
   const r = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
   const newRewards = (r.rewards||[]).reduce((a,v)=>a+v.reward.reduce((s,x)=>s+Number(x.amount),0),0)/1e18;
-
   if(newRewards > rewardsInj){
     rewardsInj = newRewards;
   }
