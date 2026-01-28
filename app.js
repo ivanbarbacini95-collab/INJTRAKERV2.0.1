@@ -92,22 +92,44 @@ function updateChart(p){
   chart.update("none");
 }
 
+/* CONNECTION STATUS */
+const connectionStatus = $("connectionStatus");
+const statusDot = connectionStatus.querySelector(".status-dot");
+const statusText = connectionStatus.querySelector(".status-text");
+
+function setConnectionStatus(online){
+  if(online){
+    statusDot.style.background = "#22c55e";
+    statusText.textContent = "Online";
+  } else {
+    statusDot.style.background = "#ef4444";
+    statusText.textContent = "Offline";
+  }
+}
+setConnectionStatus(false);
+
 /* WS */
 function startWS(){
   if(ws) ws.close();
   ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage=e=>{
+  
+  ws.onopen = () => setConnectionStatus(true);
+  ws.onmessage = e=>{
     const p=+JSON.parse(e.data).p;
     targetPrice=p;
     price24hHigh=Math.max(price24hHigh,p);
     price24hLow=Math.min(price24hLow,p);
     updateChart(p);
   };
-  ws.onclose=()=>setTimeout(startWS,3000);
+  ws.onclose=()=> {
+    setConnectionStatus(false);
+    setTimeout(startWS,3000);
+  };
+  ws.onerror = ()=> setConnectionStatus(false);
 }
 startWS();
 
-/* PRICE BAR LOGIC CON GRADIENTE */
+/* PRICE BAR */
 function updatePriceBar() {
   const min = price24hLow;
   const max = price24hHigh;
@@ -170,7 +192,6 @@ function animate(){
   colorNumber($("rewards"),displayedRewards,rewardsInj,7);
   $("rewardsUsd").textContent=`≈ $${(displayedRewards*displayedPrice).toFixed(2)}`;
 
-  // Gradiente barra rewards
   $("rewardBar").style.background = "linear-gradient(to right, #0ea5e9, #3b82f6)";
   $("rewardBar").style.width = Math.min(displayedRewards/0.05*100,100)+"%";
   $("rewardPercent").textContent=(displayedRewards/0.05*100).toFixed(1)+"%";
