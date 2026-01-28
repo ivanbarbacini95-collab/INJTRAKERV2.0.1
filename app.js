@@ -117,20 +117,35 @@ function startWS(){
 }
 startWS();
 
+// Helper per animare solo i numeri che cambiano con colore rosso/verde
+function animateNumber(element, current, target, decimals=4) {
+    current = Number(current) || 0;
+    target = Number(target) || 0;
+    if(current.toFixed(decimals) === target.toFixed(decimals)) return target;
+
+    const isUp = target > current;
+    element.style.color = isUp ? "#22c55e" : "#ef4444";
+
+    const step = (target - current) * 0.1;
+    const next = current + step;
+
+    element.innerText = next.toFixed(decimals);
+    return next;
+}
+
 // Update numbers and bars
 function animate(){
+  const center=50;
   const lerp = (a,b,f)=>a+(b-a)*f;
 
   // Price
-  displayedPrice = lerp(displayedPrice,targetPrice,0.1);
-  priceEl.innerText = displayedPrice.toFixed(4);
+  displayedPrice = animateNumber(priceEl, displayedPrice, targetPrice, 4);
 
   const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
   price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
   price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
 
   // Barra prezzo dal centro con linea gialla
-  const center=50;
   const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
   let linePos;
   if(displayedPrice>=price24hOpen){
@@ -152,30 +167,28 @@ function animate(){
   priceOpenEl.innerText=price24hOpen.toFixed(4);
 
   // Available
-  displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
-  availableEl.innerText=displayedAvailable.toFixed(6);
-  availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
+  displayedAvailable = animateNumber(availableEl, displayedAvailable, availableInj, 6);
+  availableUsdEl.innerText = (displayedAvailable * displayedPrice).toFixed(2);
 
   // Stake
-  displayedStake=lerp(displayedStake,stakeInj,0.1);
-  stakeEl.innerText=displayedStake.toFixed(4);
-  stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
+  displayedStake = animateNumber(stakeEl, displayedStake, stakeInj, 4);
+  stakeUsdEl.innerText = (displayedStake * displayedPrice).toFixed(2);
 
   // Rewards
-  displayedRewards=lerp(displayedRewards,rewardsInj,0.05);
-  rewardsEl.innerText=displayedRewards.toFixed(6);
-  rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
+  displayedRewards = animateNumber(rewardsEl, displayedRewards, rewardsInj, 6);
+  rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
 
   // Barra reward animata (0 → 0.05 INJ)
   const maxReward = 0.05;
   const targetPercent = Math.min(displayedRewards / maxReward * 100, 100);
   let currentWidth = parseFloat(rewardBarEl.style.width) || 0;
-  const step = (targetPercent - currentWidth) * 0.1; // velocità animazione
+  const step = (targetPercent - currentWidth) * 0.1;
   rewardBarEl.style.width = (currentWidth + step) + "%";
   rewardPercentEl.innerText = ((currentWidth + step).toFixed(0)) + "%";
 
   // APR
-  aprEl.innerText=apr.toFixed(2)+"%";
+  apr = animateNumber(aprEl, apr, apr, 2);
+  aprEl.innerText = apr.toFixed(2) + "%";
 
   // Last update
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
