@@ -6,7 +6,7 @@ let price24hLow = 0, price24hHigh = 0;
 let stakeInj = 0, displayedStake = 0;
 let rewardsInj = 0, displayedRewards = 0;
 let availableInj = 0, displayedAvailable = 0;
-let apr = 0;
+let aprValue = 0;
 
 // Chart
 let chart, chartData = [];
@@ -75,7 +75,7 @@ async function loadData(){
     const poolRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
     const bonded = Number(poolRes.pool?.bonded_tokens||0);
     const notBonded = Number(poolRes.pool?.not_bonded_tokens||0);
-    apr = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
+    aprValue = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
   } catch(e){ console.error("Errore dati Injective:",e);}
 }
 loadData();
@@ -111,23 +111,23 @@ function drawChart(){
 function startWS(){
   const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
   ws.onmessage = e => { 
-    const p=+JSON.parse(e.data).p; 
-    targetPrice=p; 
-    if(p>price24hHigh) price24hHigh=p; 
-    if(p<price24hLow) price24hLow=p; 
+    const p = +JSON.parse(e.data).p; 
+    targetPrice = p; 
+    if(p > price24hHigh) price24hHigh = p; 
+    if(p < price24hLow) price24hLow = p; 
   };
   ws.onclose = ()=>setTimeout(startWS,3000);
 }
 startWS();
 
-// Animazione cifra per cifra con colore solo sulle cifre cambiate
+// Animazione cifra per cifra
 function animateDigits(element, current, target, decimals = 4) {
     current = Number(current) || 0;
     target = Number(target) || 0;
 
     if(current.toFixed(decimals) === target.toFixed(decimals)) {
         element.innerHTML = target.toFixed(decimals);
-        element.style.color = "#f9fafb"; // neutro
+        element.style.color = "#f9fafb";
         return target;
     }
 
@@ -153,7 +153,7 @@ function animateDigits(element, current, target, decimals = 4) {
 
 // Update numeri e barre
 function animate(){
-    const center=50;
+    const center = 50;
 
     // Price con freccia
     let oldPrice = displayedPrice;
@@ -168,30 +168,31 @@ function animate(){
         arrowTimeout = setTimeout(() => { priceArrowEl.style.display = "none"; }, 1500);
     }
 
-    const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
-    price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
-    price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
+    // Delta 24h
+    const delta = ((displayedPrice - price24hOpen) / price24hOpen) * 100;
+    price24hEl.innerText = (delta > 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
+    price24hEl.className = "sub " + (delta > 0 ? "up" : delta < 0 ? "down" : "");
 
     // Barra prezzo
-    const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
+    const percent = Math.min(Math.abs(displayedPrice - price24hOpen) / Math.max(price24hHigh - price24hLow,0.0001)*50,50);
     let linePos;
-    if(displayedPrice>=price24hOpen){
-        linePos=center+percent;
-        priceBarEl.style.left=`${center}%`;
-        priceBarEl.style.width=`${linePos-center}%`;
+    if(displayedPrice >= price24hOpen){
+        linePos = center + percent;
+        priceBarEl.style.left = `${center}%`;
+        priceBarEl.style.width = `${linePos-center}%`;
         priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
-    } else{
-        linePos=center-percent;
-        priceBarEl.style.left=`${linePos}%`;
-        priceBarEl.style.width=`${center-linePos}%`;
+    } else {
+        linePos = center - percent;
+        priceBarEl.style.left = `${linePos}%`;
+        priceBarEl.style.width = `${center-linePos}%`;
         priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
     }
-    priceLineEl.style.left=`${linePos}%`;
+    priceLineEl.style.left = `${linePos}%`;
 
     // Min/Open/Max
-    priceMinEl.innerText=price24hLow.toFixed(4);
-    priceMaxEl.innerText=price24hHigh.toFixed(4);
-    priceOpenEl.innerText=price24hOpen.toFixed(4);
+    priceMinEl.innerText = price24hLow.toFixed(4);
+    priceMaxEl.innerText = price24hHigh.toFixed(4);
+    priceOpenEl.innerText = price24hOpen.toFixed(4);
 
     // Available
     displayedAvailable = animateDigits(availableEl, displayedAvailable, availableInj, 6);
@@ -205,20 +206,18 @@ function animate(){
     displayedRewards = animateDigits(rewardsEl, displayedRewards, rewardsInj, 6);
     rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
 
-    // Barra reward animata (0 → 0.05 INJ)
+    // Barra reward 0-0.05
     const maxReward = 0.05;
     const targetPercent = Math.min(displayedRewards / maxReward * 100, 100);
     let currentWidth = parseFloat(rewardBarEl.style.width) || 0;
-    const step = (targetPercent - currentWidth) * 0.1;
-    rewardBarEl.style.width = (currentWidth + step) + "%";
-    rewardPercentEl.innerText = ((currentWidth + step).toFixed(0)) + "%";
+    rewardBarEl.style.width = currentWidth + (targetPercent - currentWidth) * 0.1 + "%";
+    rewardPercentEl.innerText = Math.round(Math.min(currentWidth + (targetPercent - currentWidth) * 0.1, 100)) + "%";
 
-    // APR
-    apr = animateDigits(aprEl, apr, apr, 2);
-    aprEl.innerText = apr.toFixed(2) + "%";
+    // APR (solo testo, senza animazione cifre)
+    aprEl.innerText = aprValue.toFixed(2) + "%";
 
     // Last update
-    updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
+    updatedEl.innerText = "Last Update: " + new Date().toLocaleTimeString();
 
     requestAnimationFrame(animate);
 }
