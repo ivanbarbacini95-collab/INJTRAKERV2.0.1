@@ -15,12 +15,12 @@
     <h1>Injective Dashboard</h1>
 
     <div class="tf-wrapper">
-      <div id="tfIcon" class="tf-icon">⏱</div>
+      <div id="tfIcon" class="tf-icon" title="Timeframe">⏱</div>
       <div id="tfMenu" class="tf-menu">
         <div data-tf="1h">1H</div>
         <div data-tf="3h">3H</div>
         <div data-tf="12h">12H</div>
-        <div data-tf="1d" class="active">1G</div>
+        <div data-tf="1d">1G</div>
         <div data-tf="1w">1SETT</div>
         <div data-tf="1m">1M</div>
         <div data-tf="1y">1Y</div>
@@ -35,17 +35,18 @@
     <div class="card price-card">
       <div class="label">INJ Price</div>
       <div class="value-row"><span id="price">0.0000</span></div>
-      <div class="sub-row"><span id="price24h" class="sub">0.00%</span></div>
+      <div class="sub-row"><span id="price24h">0.00%</span></div>
 
       <div class="price-bar-container">
         <div id="priceBar" class="price-bar"></div>
         <div id="priceLine" class="price-line"></div>
+        <div class="open-tick"></div>
       </div>
 
       <div class="price-values">
-        <span id="priceMin" class="price-extremes left">0.00</span>
-        <span id="priceOpen" class="price-extremes center">0.00</span>
-        <span id="priceMax" class="price-extremes right">0.00</span>
+        <span id="priceMin" class="price-extremes min" title="">0.00</span>
+        <span id="priceOpen" class="price-extremes open">0.00</span>
+        <span id="priceMax" class="price-extremes max" title="">0.00</span>
       </div>
     </div>
 
@@ -65,10 +66,9 @@
       <div class="label">Rewards</div>
       <div class="value-row"><span id="rewards">0.0000000</span></div>
       <div class="sub-row"><span id="rewardsUsd">≈ $0.00</span></div>
-
       <div class="reward-bar-container">
         <div id="rewardBar" class="reward-bar"></div>
-        <span id="rewardPercent" class="reward-percent">0,00%</span>
+        <span id="rewardPercent">0,00%</span>
       </div>
     </div>
 
@@ -84,8 +84,7 @@
 
   </div>
 
-  <div id="updated" class="last-update">Last Update: --:--</div>
-
+  <div id="updated" class="last-update"></div>
 </div>
 
 <script src="app.js"></script>
