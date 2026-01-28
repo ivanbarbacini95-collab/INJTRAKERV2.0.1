@@ -76,7 +76,7 @@ async function loadData(){
   } catch(e){ console.error("Errore dati Injective:",e);}
 }
 loadData();
-setInterval(loadData,2000); // aggiorniamo anche rewards ogni 2s
+setInterval(loadData,2000);
 
 // --- Fetch Price History (24h) ---
 async function fetchHistory(){
@@ -164,7 +164,7 @@ startWS();
 function animate(){
   const lerp = (a,b,f)=>a+(b-a)*f;
 
-  // --- PRICE ---
+  // PRICE
   const oldPrice = displayedPrice;
   displayedPrice=lerp(displayedPrice,targetPrice,0.1);
   if(Math.abs(displayedPrice-oldPrice)>0.00001){
@@ -192,24 +192,23 @@ function animate(){
   }
   priceLineEl.style.left=`${linePos}%`;
 
-  // Valori min/open/max con 1 decimale in meno e font dei valori piccoli
   priceMinEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hLow.toFixed(3)}</span>`;
   priceMaxEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hHigh.toFixed(3)}</span>`;
   priceOpenEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hOpen.toFixed(3)}</span>`;
 
-  // --- AVAILABLE ---
+  // AVAILABLE
   const oldAvailable = displayedAvailable;
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
   colorNumber(availableEl, displayedAvailable, oldAvailable,6);
   availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
-  // --- STAKE ---
+  // STAKE
   const oldStake = displayedStake;
   displayedStake=lerp(displayedStake,stakeInj,0.1);
   colorNumber(stakeEl, displayedStake, oldStake,4);
   stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
-  // --- REWARDS ---
+  // REWARDS
   const oldRewards = displayedRewards;
   displayedRewards=lerp(displayedRewards,rewardsInj,0.1);
   colorNumber(rewardsEl, displayedRewards, oldRewards,7);
@@ -219,10 +218,10 @@ function animate(){
   rewardBarEl.style.width=rewardPercent+"%";
   rewardPercentEl.innerText=(rewardPercent.toFixed(1))+"%";
 
-  // --- APR ---
+  // APR
   aprEl.innerText=apr.toFixed(2)+"%";
 
-  // --- LAST UPDATE ---
+  // LAST UPDATE
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
@@ -234,7 +233,6 @@ function colorNumber(el,value,oldValue,decimals){
   const newVal = value.toFixed(decimals);
   const oldVal = oldValue.toFixed(decimals);
 
-  // Mostriamo ogni cifra separata
   let html = '';
   for(let i=0;i<newVal.length;i++){
     if(newVal[i]!==oldVal[i]){
