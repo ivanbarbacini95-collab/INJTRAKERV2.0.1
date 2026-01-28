@@ -89,13 +89,32 @@ body {
 
 .price-values {
   position: relative;
-  font-size: .8rem;
-  height: 18px;
+  margin-top: 8px;
+  height: 20px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
-.price-extremes.left { position:absolute; left:0; }
-.price-extremes.center { position:absolute; left:50%; transform:translateX(-50%); }
-.price-extremes.right { position:absolute; right:0; }
+.price-extremes {
+  font-variant-numeric: tabular-nums;
+}
+
+.price-extremes.left {
+  position: absolute;
+  left: 0;
+}
+
+.price-extremes.center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.price-extremes.right {
+  position: absolute;
+  right: 0;
+}
 
 .reward-bar-container {
   position: relative;
@@ -165,3 +184,4 @@ body {
   background: #22c55e;
   color: #000;
 }
+
