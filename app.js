@@ -21,13 +21,17 @@ let displayedAvailable = 0;
 let displayedStake = 0;
 let displayedRewards = 0;
 
-/* -------- riferimenti per cambio colore -------- */
+/* -------- riferimenti colore -------- */
 const prevTargets = {
   price: { value: null },
   available: { value: null },
   stake: { value: null },
   rewards: { value: null }
 };
+
+/* -------- chart -------- */
+let chart;
+let chartData = [];
 
 /* -------- DOM -------- */
 const addressInput = document.getElementById("addressInput");
@@ -131,14 +135,48 @@ async function fetchHistory() {
   );
   const data = await res.json();
 
-  const prices = data.map(c => +c[4]);
-  price24hOpen = +data[0][1];
-  price24hLow = Math.min(...prices);
-  price24hHigh = Math.max(...prices);
-  targetPrice = prices.at(-1);
+  chartData = data.map(c => +c[4]);
+  price24hOpen = +data[0][1]; // open approssimato
+  price24hLow = Math.min(...chartData);
+  price24hHigh = Math.max(...chartData);
+  targetPrice = chartData.at(-1);
+
+  drawChart();
 }
 
 fetchHistory();
+
+/* -------- chart -------- */
+function drawChart() {
+  const ctx = document.getElementById("priceChart");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: chartData.map((_, i) => i),
+      datasets: [{
+        data: chartData,
+        borderColor: "#22c55e",
+        backgroundColor: "rgba(34,197,94,0.15)",
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { display: false },
+        y: { display: false }
+      }
+    }
+  });
+}
 
 /* -------- Binance WS -------- */
 function startWS() {
@@ -182,9 +220,9 @@ function animate() {
   priceBarEl.style.background =
     displayedPrice >= price24hOpen ? "#22c55e" : "#ef4444";
 
-  updateAnimatedNumber(priceMinEl, price24hLow, price24hLow, PRICE_DECIMALS, { value: null });
-  updateAnimatedNumber(priceOpenEl, price24hOpen, price24hOpen, PRICE_DECIMALS, { value: null });
-  updateAnimatedNumber(priceMaxEl, price24hHigh, price24hHigh, PRICE_DECIMALS, { value: null });
+  priceMinEl.innerText = price24hLow.toFixed(PRICE_DECIMALS);
+  priceOpenEl.innerText = price24hOpen.toFixed(PRICE_DECIMALS);
+  priceMaxEl.innerText = price24hHigh.toFixed(PRICE_DECIMALS);
 
   displayedAvailable += (availableInj - displayedAvailable) * 0.1;
   updateAnimatedNumber(
