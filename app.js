@@ -149,14 +149,28 @@ function animate(){
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
-  // PRICE BAR
-  const barWidth = Math.min(Math.abs(displayedPrice-price24hOpen)/(price24hHigh-price24hLow)*50,50);
-  const isPositive = displayedPrice >= price24hOpen;
-  $("priceBar").style.width = barWidth + "%";
-  $("priceBar").style.left = "50%";
-  $("priceBar").style.background = isPositive ? "linear-gradient(to right, #22c55e, #10b981)" : "linear-gradient(to left, #ef4444, #f87171)";
-  $("priceLine").style.left = ((displayedPrice-price24hLow)/(price24hHigh-price24hLow)*100) + "%";
-  $("priceLine").style.background = isPositive ? "#facc15" : "#f87171";
+  // PRICE BAR - linea gialla trascina la barra
+const priceRange = price24hHigh - price24hLow;
+const centerPercent = ((price24hOpen - price24hLow)/priceRange) * 100; // posizione centrale
+const currentPercent = ((displayedPrice - price24hLow)/priceRange) * 100;
+
+if(displayedPrice >= price24hOpen){
+  // prezzo sopra apertura -> barra verde dalla apertura alla linea gialla
+  $("priceLine").style.left = currentPercent + "%";
+  $("priceLine").style.background = "#facc15";
+
+  $("priceBar").style.left = centerPercent + "%";
+  $("priceBar").style.width = (currentPercent - centerPercent) + "%";
+  $("priceBar").style.background = "linear-gradient(to right, #22c55e, #10b981)";
+} else {
+  // prezzo sotto apertura -> barra rossa dalla apertura alla linea gialla
+  $("priceLine").style.left = currentPercent + "%";
+  $("priceLine").style.background = "#f87171";
+
+  $("priceBar").style.left = currentPercent + "%";
+  $("priceBar").style.width = (centerPercent - currentPercent) + "%";
+  $("priceBar").style.background = "linear-gradient(to left, #ef4444, #f87171)";
+}
 
   // AVAILABLE
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
