@@ -172,20 +172,31 @@ function animate(){
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
-  // --- BARRA PREZZO DIVISA ---
+  // Aggiornamento barra prezzo
+function updatePriceBar() {
   const priceRange = price24hHigh - price24hLow;
-  const centerPercent = ((price24hOpen - price24hLow)/priceRange)*100;
-  const currentPercent = ((displayedPrice - price24hLow)/priceRange)*100;
+  if (priceRange === 0) return;
 
-  if(displayedPrice >= price24hOpen){
-    $("priceBarGreen").style.left = centerPercent + "%";
-    $("priceBarGreen").style.width = (currentPercent - centerPercent) + "%";
+  // Percentuale del prezzo corrente rispetto a min-max 24h
+  const percent = (displayedPrice - price24hOpen) / priceRange * 50; // metà a dx/sx
+  const center = 50; // centro della barra
+
+  if (displayedPrice >= price24hOpen) {
+    // sopra apertura → barra verde a destra
+    $("priceBarGreen").style.left = "50%";
+    $("priceBarGreen").style.width = Math.min(percent*2,50) + "%"; // non oltre metà container
     $("priceBarRed").style.width = "0%";
   } else {
-    $("priceBarRed").style.left = currentPercent + "%";
-    $("priceBarRed").style.width = (centerPercent - currentPercent) + "%";
+    // sotto apertura → barra rossa a sinistra
+    $("priceBarRed").style.left = 50 + percent + "%"; // left si sposta indietro
+    $("priceBarRed").style.width = Math.min(-percent*2,50) + "%";
     $("priceBarGreen").style.width = "0%";
   }
+
+  // linea gialla al prezzo corrente
+  const linePercent = ((displayedPrice - price24hLow) / priceRange) * 100;
+  $("priceLine").style.left = linePercent + "%";
+}
 
   $("priceLine").style.left = currentPercent + "%";
 
