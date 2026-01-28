@@ -16,7 +16,7 @@ let apr = 0;
 // Chart
 let chart, chartData = [];
 
-// DOM Elements
+// DOM
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
 const price24hEl = document.getElementById("price24h");
@@ -41,18 +41,11 @@ const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
 // --- Helpers ---
-const fetchJSON = async url => {
-  try { const res = await fetch(url); return await res.json(); } 
-  catch(e){ console.error("Fetch error:", url,e); return {}; }
-};
+const fetchJSON = async url => { try { return await (await fetch(url)).json(); } catch(e){ console.error(e); return {}; } };
 
 // --- Address Input ---
 addressInput.value = address;
-addressInput.onchange = e => {
-  address = e.target.value.trim();
-  localStorage.setItem("inj_address", address);
-  loadData();
-};
+addressInput.onchange = e => { address = e.target.value.trim(); localStorage.setItem("inj_address", address); loadData(); };
 
 // --- Load Injective Data ---
 async function loadData(){
@@ -73,7 +66,7 @@ async function loadData(){
     const bonded = Number(poolRes.pool?.bonded_tokens||0);
     const notBonded = Number(poolRes.pool?.not_bonded_tokens||0);
     apr = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
-  } catch(e){ console.error("Errore dati Injective:",e);}
+  } catch(e){ console.error(e); }
 }
 loadData();
 setInterval(loadData,2000);
@@ -89,7 +82,7 @@ async function fetchHistory(){
     price24hHigh = Math.max(...chartData);
     targetPrice = chartData.at(-1);
     drawChart();
-  } catch(e){ console.error("Errore price history:", e);}
+  } catch(e){ console.error(e); }
 }
 fetchHistory();
 
@@ -97,13 +90,10 @@ fetchHistory();
 function drawChart(){
   const ctx = document.getElementById("priceChart");
   if(chart) chart.destroy();
-
   const gradient = ctx.getContext('2d').createLinearGradient(0,0,0,200);
-  gradient.addColorStop(0, 'rgba(34,197,94,0.3)');
-  gradient.addColorStop(1, 'rgba(34,197,94,0)');
-
-  const lineColor = targetPrice >= price24hOpen ? "#22c55e" : "#ef4444";
-
+  gradient.addColorStop(0,'rgba(34,197,94,0.3)');
+  gradient.addColorStop(1,'rgba(34,197,94,0)');
+  const lineColor = targetPrice>=price24hOpen?"#22c55e":"#ef4444";
   chart = new Chart(ctx,{
     type:"line",
     data:{
@@ -123,26 +113,9 @@ function drawChart(){
       responsive:true,
       maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          enabled:true,
-          mode:'nearest',
-          intersect:false,
-          displayColors:false,
-          backgroundColor:"#1e293b",
-          titleColor:"#f9fafb",
-          bodyColor:"#f9fafb",
-          callbacks:{
-            label: ctx=>`Price: ${parseFloat(ctx.formattedValue).toFixed(4)}`,
-            title: ctx=>`Point #${ctx[0].dataIndex+1}`
-          }
-        }
-      },
-      scales:{
-        x:{display:true,grid:{color:"#1e293b"},ticks:{color:"#9ca3af"}},
-        y:{display:true,grid:{color:"#1e293b"},ticks:{color:"#9ca3af"}}
-      }
+      plugins:{legend:{display:false}},
+      scales:{x:{display:true,ticks:{color:"#9ca3af"},grid:{color:"#1e293b"}},
+              y:{display:true,ticks:{color:"#9ca3af"},grid:{color:"#1e293b"}}}
     }
   });
 }
@@ -150,96 +123,75 @@ function drawChart(){
 // --- Binance WS ---
 function startWS(){
   const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage = e => {
-    const p=+JSON.parse(e.data).p;
-    targetPrice=p;
-    if(p>price24hHigh) price24hHigh=p;
-    if(p<price24hLow) price24hLow=p;
-  };
-  ws.onclose=()=>setTimeout(startWS,3000);
+  ws.onmessage = e => { const p=+JSON.parse(e.data).p; targetPrice=p; if(p>price24hHigh) price24hHigh=p; if(p<price24hLow) price24hLow=p; };
+  ws.onclose = ()=>setTimeout(startWS,3000);
 }
 startWS();
 
-// --- Animate Numbers & Bars ---
+// --- Animate Numbers ---
 function animate(){
   const lerp = (a,b,f)=>a+(b-a)*f;
 
-  // PRICE
+  // Price
   const oldPrice = displayedPrice;
   displayedPrice=lerp(displayedPrice,targetPrice,0.1);
-  if(Math.abs(displayedPrice-oldPrice)>0.00001){
-    colorNumber(priceEl, displayedPrice, oldPrice, 4);
-
+  if(Math.abs(displayedPrice-oldPrice)>0.00001){ colorNumber(priceEl,displayedPrice,oldPrice,4);
     const delta=((displayedPrice-price24hOpen)/price24hOpen)*100;
-    price24hEl.innerText=(delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
-    price24hEl.className="sub "+(delta>0?"up":delta<0?"down":"");
-  }
+    price24hEl.innerText=(delta>0?"▲ ":"▼ ")+Math.abs(delta).toFixed(2)+"%";
+    price24hEl.className="sub "+(delta>0?"up":delta<0?"down":""); }
 
-  // BARRA PREZZO
+  // Price bar
   const center=50;
   const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
-  let linePos;
-  if(displayedPrice>=price24hOpen){
-    linePos=center+percent;
-    priceBarEl.style.left=`${center}%`;
-    priceBarEl.style.width=`${linePos-center}%`;
-    priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
-  } else{
-    linePos=center-percent;
-    priceBarEl.style.left=`${linePos}%`;
-    priceBarEl.style.width=`${center-linePos}%`;
-    priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
-  }
+  let linePos=displayedPrice>=price24hOpen?center+percent:center-percent;
+  priceBarEl.style.left=`${displayedPrice>=price24hOpen?center:linePos}%`;
+  priceBarEl.style.width=`${displayedPrice>=price24hOpen?linePos-center:center-linePos}%`;
+  priceBarEl.style.background=displayedPrice>=price24hOpen?"linear-gradient(to right,#22c55e,#10b981)":"linear-gradient(to right,#ef4444,#f87171)";
   priceLineEl.style.left=`${linePos}%`;
 
   priceMinEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hLow.toFixed(3)}</span>`;
-  priceMaxEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hHigh.toFixed(3)}</span>`;
   priceOpenEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hOpen.toFixed(3)}</span>`;
+  priceMaxEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hHigh.toFixed(3)}</span>`;
 
-  // AVAILABLE
-  const oldAvailable = displayedAvailable;
+  // Available
+  const oldAvailable=displayedAvailable;
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
-  colorNumber(availableEl, displayedAvailable, oldAvailable,6);
+  colorNumber(availableEl,displayedAvailable,oldAvailable,6);
   availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
-  // STAKE
-  const oldStake = displayedStake;
+  // Stake
+  const oldStake=displayedStake;
   displayedStake=lerp(displayedStake,stakeInj,0.1);
-  colorNumber(stakeEl, displayedStake, oldStake,4);
+  colorNumber(stakeEl,displayedStake,oldStake,4);
   stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
-  // REWARDS
-  const oldRewards = displayedRewards;
+  // Rewards
+  const oldRewards=displayedRewards;
   displayedRewards=lerp(displayedRewards,rewardsInj,0.1);
-  colorNumber(rewardsEl, displayedRewards, oldRewards,7);
+  colorNumber(rewardsEl,displayedRewards,oldRewards,7);
   rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
 
-  const rewardPercent = Math.min(displayedRewards/0.05*100,100);
+  const rewardPercent=Math.min(displayedRewards/0.05*100,100);
   rewardBarEl.style.width=rewardPercent+"%";
-  rewardPercentEl.innerText=(rewardPercent.toFixed(1))+"%";
+  rewardPercentEl.innerText=rewardPercent.toFixed(1)+"%";
 
   // APR
   aprEl.innerText=apr.toFixed(2)+"%";
 
-  // LAST UPDATE
+  // Last update
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
 }
 animate();
 
-// --- Color Numbers Helper ---
+// --- Color Number ---
 function colorNumber(el,value,oldValue,decimals){
-  const newVal = value.toFixed(decimals);
-  const oldVal = oldValue.toFixed(decimals);
-
-  let html = '';
+  const newVal=value.toFixed(decimals);
+  const oldVal=oldValue.toFixed(decimals);
+  let html='';
   for(let i=0;i<newVal.length;i++){
-    if(newVal[i]!==oldVal[i]){
-      html += `<span style="color:${newVal[i]>oldVal[i]?'#22c55e':'#ef4444'}">${newVal[i]}</span>`;
-    } else {
-      html += `<span style="color:#f9fafb">${newVal[i]}</span>`;
-    }
+    html+=`<span style="color:${newVal[i]!==oldVal[i]?newVal[i]>oldVal[i]?'#22c55e':'#ef4444':'#f9fafb'}">${newVal[i]}</span>`;
   }
-  el.innerHTML = html;
+  el.innerHTML=html;
 }
