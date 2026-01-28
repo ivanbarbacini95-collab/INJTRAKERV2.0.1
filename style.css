@@ -14,6 +14,12 @@ body {
   gap: 1rem;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .header h1 {
   font-size: 1.8rem;
   font-weight: 800;
@@ -25,27 +31,6 @@ body {
   border: 2px solid #374151;
   background: #0a0f1f;
   color: #fff;
-}
-
-.timeframe-toggle {
-  display: flex;
-  justify-content: center;
-  gap: .5rem;
-}
-
-.timeframe-toggle button {
-  background: #111827;
-  border: 1px solid #374151;
-  color: #9ca3af;
-  padding: .4rem .8rem;
-  border-radius: .4rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.timeframe-toggle button.active {
-  background: #22c55e;
-  color: #000;
 }
 
 .cards-wrapper {
@@ -141,4 +126,42 @@ body {
   text-align:center;
   font-size:.8rem;
   color:#9ca3af;
+}
+
+/* --- Timeframe menu --- */
+.tf-wrapper {
+  position: relative;
+}
+
+.tf-icon {
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: .3rem;
+}
+
+.tf-menu {
+  position: absolute;
+  top: 140%;
+  right: 0;
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: .4rem;
+  display: none;
+  flex-direction: column;
+  min-width: 80px;
+  z-index: 10;
+}
+
+.tf-menu div {
+  padding: .4rem .6rem;
+  cursor: pointer;
+  font-size: .85rem;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.tf-menu div:hover,
+.tf-menu div.active {
+  background: #22c55e;
+  color: #000;
 }
