@@ -160,9 +160,10 @@ priceLineEl.style.left = `${linePos}%`;
   updateDigits(rewardsUsdEl,prevR*displayedPrice,displayedRewards*displayedPrice,2);
 
   // ---- Reward Bar ----
-  let rewardPercent=Math.min(displayedRewards/0.05*100,100);
-  rewardBarEl.style.width=rewardPercent+"%";
-  rewardPercentEl.innerText=rewardPercent.toFixed(1)+"%";
+let rewardPercent = Math.min(displayedRewards/0.05*100,100);
+rewardBarEl.style.width = `${rewardPercent}%`;
+rewardBarEl.style.background = "linear-gradient(to right, #0ea5e9, #3b82f6)";
+rewardPercentEl.innerText = rewardPercent.toFixed(1)+"%";
 
   // ---- APR ----
   updateDigits(aprEl,parseFloat(aprEl.innerText),apr,2,true);
