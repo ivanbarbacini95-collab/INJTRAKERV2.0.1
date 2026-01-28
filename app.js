@@ -4,7 +4,7 @@ const REWARD_MAX = 0.05;
 
 let address = localStorage.getItem("inj_address") || "";
 
-let displayedPrice = 0;
+/* -------- valori target -------- */
 let targetPrice = 0;
 let price24hOpen = 0;
 let price24hLow = 0;
@@ -15,15 +15,21 @@ let stakeInj = 0;
 let rewardsInj = 0;
 let apr = 0;
 
+/* -------- valori animati -------- */
+let displayedPrice = 0;
 let displayedAvailable = 0;
 let displayedStake = 0;
 let displayedRewards = 0;
 
-let chart;
-let chartData = [];
+/* -------- riferimenti per cambio colore -------- */
+const prevTargets = {
+  price: { value: null },
+  available: { value: null },
+  stake: { value: null },
+  rewards: { value: null }
+};
 
-/* ---------------- DOM ---------------- */
-
+/* -------- DOM -------- */
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
 const price24hEl = document.getElementById("price24h");
@@ -45,23 +51,25 @@ const rewardPercentEl = document.getElementById("rewardPercent");
 const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
-/* ---------------- Helpers ---------------- */
-
+/* -------- helpers -------- */
 const fetchJSON = async url => {
   const res = await fetch(url);
   if (!res.ok) throw new Error(res.status);
   return res.json();
 };
 
-const updateNumber = (el, oldV, newV, fixed) => {
-  el.innerText = newV.toFixed(fixed);
-  if (newV > oldV) el.classList.add("up");
-  else if (newV < oldV) el.classList.add("down");
-  setTimeout(() => el.classList.remove("up", "down"), 400);
-};
+function updateAnimatedNumber(el, displayed, target, decimals, ref) {
+  el.innerText = displayed.toFixed(decimals);
 
-/* ---------------- Address ---------------- */
+  if (ref.value !== null && target !== ref.value) {
+    el.classList.add(target > ref.value ? "up" : "down");
+    setTimeout(() => el.classList.remove("up", "down"), 400);
+  }
 
+  ref.value = target;
+}
+
+/* -------- address -------- */
 addressInput.value = address;
 addressInput.onchange = e => {
   address = e.target.value.trim();
@@ -69,16 +77,15 @@ addressInput.onchange = e => {
   loadInjectiveData();
 };
 
-/* ---------------- Injective Data ---------------- */
-
+/* -------- Injective data -------- */
 async function loadInjectiveData() {
   if (!address) return;
 
-  const balanceRes = await fetchJSON(
+  const bal = await fetchJSON(
     `https://lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`
   );
-  const injBal = balanceRes.balances?.find(b => b.denom === "inj");
-  availableInj = injBal ? Number(injBal.amount) / 1e18 : 0;
+  const inj = bal.balances?.find(b => b.denom === "inj");
+  availableInj = inj ? Number(inj.amount) / 1e18 : 0;
 
   const stakeRes = await fetchJSON(
     `https://lcd.injective.network/cosmos/staking/v1beta1/delegations/${address}`
@@ -111,59 +118,29 @@ async function loadInjectiveData() {
   const bonded = Number(poolRes.pool?.bonded_tokens || 0);
   const notBonded = Number(poolRes.pool?.not_bonded_tokens || 0);
 
-  apr = bonded
-    ? (inflation * (bonded + notBonded) / bonded) * 100
-    : 0;
+  apr = bonded ? (inflation * (bonded + notBonded) / bonded) * 100 : 0;
 }
 
 loadInjectiveData();
 setInterval(loadInjectiveData, 60000);
 
-/* ---------------- Price History ---------------- */
-
+/* -------- price history -------- */
 async function fetchHistory() {
   const res = await fetch(
     "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96"
   );
   const data = await res.json();
 
-  chartData = data.map(c => +c[4]);
-  price24hOpen = +data[0][1]; // open approssimato (15m candles)
-  price24hLow = Math.min(...chartData);
-  price24hHigh = Math.max(...chartData);
-  targetPrice = chartData.at(-1);
-
-  drawChart();
+  const prices = data.map(c => +c[4]);
+  price24hOpen = +data[0][1];
+  price24hLow = Math.min(...prices);
+  price24hHigh = Math.max(...prices);
+  targetPrice = prices.at(-1);
 }
 
 fetchHistory();
 
-/* ---------------- Chart ---------------- */
-
-function drawChart() {
-  const ctx = document.getElementById("priceChart");
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: chartData.map((_, i) => i),
-      datasets: [{
-        data: chartData,
-        borderColor: "#22c55e",
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { x: { display: false } }
-    }
-  });
-}
-
-/* ---------------- Binance WS ---------------- */
-
+/* -------- Binance WS -------- */
 function startWS() {
   const ws = new WebSocket(
     "wss://stream.binance.com:9443/ws/injusdt@trade"
@@ -181,17 +158,20 @@ function startWS() {
 
 startWS();
 
-/* ---------------- Animate ---------------- */
-
+/* -------- animate -------- */
 function animate() {
-  const prevPrice = displayedPrice;
   displayedPrice += (targetPrice - displayedPrice) * 0.1;
-  updateNumber(priceEl, prevPrice, displayedPrice, PRICE_DECIMALS);
+  updateAnimatedNumber(
+    priceEl,
+    displayedPrice,
+    targetPrice,
+    PRICE_DECIMALS,
+    prevTargets.price
+  );
 
-  const delta =
-    ((displayedPrice - price24hOpen) / price24hOpen) * 100;
+  const delta = ((displayedPrice - price24hOpen) / price24hOpen) * 100;
   price24hEl.innerText =
-    (delta > 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
+    (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
   price24hEl.className = "sub " + (delta >= 0 ? "up" : "down");
 
   const range = price24hHigh - price24hLow || 1;
@@ -202,33 +182,42 @@ function animate() {
   priceBarEl.style.background =
     displayedPrice >= price24hOpen ? "#22c55e" : "#ef4444";
 
-  updateNumber(priceMinEl, Number(priceMinEl.innerText), price24hLow, PRICE_DECIMALS);
-  updateNumber(priceOpenEl, Number(priceOpenEl.innerText), price24hOpen, PRICE_DECIMALS);
-  updateNumber(priceMaxEl, Number(priceMaxEl.innerText), price24hHigh, PRICE_DECIMALS);
+  updateAnimatedNumber(priceMinEl, price24hLow, price24hLow, PRICE_DECIMALS, { value: null });
+  updateAnimatedNumber(priceOpenEl, price24hOpen, price24hOpen, PRICE_DECIMALS, { value: null });
+  updateAnimatedNumber(priceMaxEl, price24hHigh, price24hHigh, PRICE_DECIMALS, { value: null });
 
-  const prevA = displayedAvailable;
   displayedAvailable += (availableInj - displayedAvailable) * 0.1;
-  updateNumber(availableEl, prevA, displayedAvailable, INJ_DECIMALS);
-  updateNumber(
-    availableUsdEl,
-    prevA * displayedPrice,
-    displayedAvailable * displayedPrice,
-    2
+  updateAnimatedNumber(
+    availableEl,
+    displayedAvailable,
+    availableInj,
+    INJ_DECIMALS,
+    prevTargets.available
   );
+  availableUsdEl.innerText =
+    (displayedAvailable * displayedPrice).toFixed(2);
 
-  const prevS = displayedStake;
   displayedStake += (stakeInj - displayedStake) * 0.1;
-  updateNumber(stakeEl, prevS, displayedStake, PRICE_DECIMALS);
-  updateNumber(
-    stakeUsdEl,
-    prevS * displayedPrice,
-    displayedStake * displayedPrice,
-    2
+  updateAnimatedNumber(
+    stakeEl,
+    displayedStake,
+    stakeInj,
+    PRICE_DECIMALS,
+    prevTargets.stake
   );
+  stakeUsdEl.innerText =
+    (displayedStake * displayedPrice).toFixed(2);
 
   displayedRewards += (rewardsInj - displayedRewards) * 0.05;
-  rewardsEl.innerText = displayedRewards.toFixed(INJ_DECIMALS);
-  rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
+  updateAnimatedNumber(
+    rewardsEl,
+    displayedRewards,
+    rewardsInj,
+    INJ_DECIMALS,
+    prevTargets.rewards
+  );
+  rewardsUsdEl.innerText =
+    (displayedRewards * displayedPrice).toFixed(2);
 
   const rewardPct = Math.min(
     (displayedRewards / REWARD_MAX) * 100,
