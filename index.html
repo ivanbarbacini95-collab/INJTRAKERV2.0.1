@@ -6,6 +6,7 @@
   <title>Injective Dashboard</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js" defer></script>
 </head>
 <body>
 
@@ -16,13 +17,11 @@
     <div class="tf-selector">
       <div class="tf-icon">⏱</div>
       <div class="tf-menu">
-        <div data-tf="1h">1h</div>
-        <div data-tf="3h">3h</div>
+        <div data-tf="1h" class="active">1h</div>
         <div data-tf="12h">12h</div>
-        <div data-tf="1d" class="active">1g</div>
-        <div data-tf="1w">1sett</div>
+        <div data-tf="1d">1d</div>
+        <div data-tf="1w">1w</div>
         <div data-tf="1M">1M</div>
-        <div data-tf="1Y">1Y</div>
       </div>
     </div>
   </div>
@@ -60,7 +59,7 @@
 
     <div class="card reward-card">
       <div class="label">Rewards</div>
-      <div class="value-row"><span id="rewards">0.0</span></div>
+      <div class="value-row"><span id="rewards">0.0000000</span></div>
       <div class="sub-row"><span id="rewardsUsd" class="sub">≈ $0.00</span></div>
       <div class="reward-bar-container">
         <div id="rewardBar" class="reward-bar"></div>
