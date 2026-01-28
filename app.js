@@ -36,11 +36,23 @@ const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
 // Helper fetch
-const fetchJSON = async url => { try{ const res = await fetch(url); return await res.json(); } catch(e){ console.error("Fetch error:", url,e); return {}; }};
+const fetchJSON = async url => { 
+  try { 
+    const res = await fetch(url); 
+    return await res.json(); 
+  } catch(e) { 
+    console.error("Fetch error:", url, e); 
+    return {}; 
+  }
+};
 
 // Input
 addressInput.value = address;
-addressInput.onchange = e => { address = e.target.value.trim(); localStorage.setItem("inj_address", address); loadData(); };
+addressInput.onchange = e => { 
+  address = e.target.value.trim(); 
+  localStorage.setItem("inj_address", address); 
+  loadData(); 
+};
 
 // Load data Injective
 async function loadData(){
@@ -95,7 +107,12 @@ function drawChart(){
 // Binance WS
 function startWS(){
   const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage = e => { const p=+JSON.parse(e.data).p; targetPrice=p; if(p>price24hHigh) price24hHigh=p; if(p<price24hLow) price24hLow=p; };
+  ws.onmessage = e => { 
+    const p=+JSON.parse(e.data).p; 
+    targetPrice=p; 
+    if(p>price24hHigh) price24hHigh=p; 
+    if(p<price24hLow) price24hLow=p; 
+  };
   ws.onclose = ()=>setTimeout(startWS,3000);
 }
 startWS();
@@ -149,9 +166,13 @@ function animate(){
   rewardsEl.innerText=displayedRewards.toFixed(6);
   rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
 
-  // Barra reward
-  const rewardPercent = Math.min(displayedRewards/0.05*100,100);
-  rewardBarEl.style.width=rewardPercent+"%";
+  // Barra reward animata (0 → 0.05 INJ)
+  const maxReward = 0.05;
+  const targetPercent = Math.min(displayedRewards / maxReward * 100, 100);
+  let currentWidth = parseFloat(rewardBarEl.style.width) || 0;
+  const step = (targetPercent - currentWidth) * 0.1; // velocità animazione
+  rewardBarEl.style.width = (currentWidth + step) + "%";
+  rewardPercentEl.innerText = ((currentWidth + step).toFixed(0)) + "%";
 
   // APR
   aprEl.innerText=apr.toFixed(2)+"%";
