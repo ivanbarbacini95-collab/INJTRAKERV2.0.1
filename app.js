@@ -155,19 +155,32 @@ function animate(){
     // Barra price con apertura al centro
     const center=50;
     let percent=0, linePos=center;
+    let barColor = displayedPrice >= price24hOpen ? "linear-gradient(to right,#22c55e,#10b981)" : "linear-gradient(to right,#ef4444,#f87171)";
     if(displayedPrice >= price24hOpen){
         percent = Math.min((displayedPrice - price24hOpen)/(price24hHigh - price24hOpen)*50,50);
         linePos = center + percent;
         priceBarEl.style.left = `${center}%`;
         priceBarEl.style.width = `${linePos - center}%`;
-        priceBarEl.style.background = "linear-gradient(to right,#22c55e,#10b981)";
+
+        // ATH lampeggiante lato destro
+        if(displayedPrice > price24hHigh){
+            barColor = "linear-gradient(to right,#facc15,#facc15)";
+            setTimeout(()=>priceBarEl.style.background = "linear-gradient(to right,#22c55e,#10b981)",500);
+        }
+
     } else {
         percent = Math.min((price24hOpen - displayedPrice)/(price24hOpen - price24hLow)*50,50);
         linePos = center - percent;
         priceBarEl.style.left = `${linePos}%`;
         priceBarEl.style.width = `${center - linePos}%`;
-        priceBarEl.style.background = "linear-gradient(to right,#ef4444,#f87171)";
+
+        // ATL lampeggiante lato sinistro
+        if(displayedPrice < price24hLow){
+            barColor = "linear-gradient(to right,#facc15,#facc15)";
+            setTimeout(()=>priceBarEl.style.background = "linear-gradient(to right,#ef4444,#f87171)",500);
+        }
     }
+    priceBarEl.style.background = barColor;
     priceLineEl.style.left = `${linePos}%`;
     priceMinEl.innerText = price24hLow.toFixed(4);
     priceMaxEl.innerText = price24hHigh.toFixed(4);
