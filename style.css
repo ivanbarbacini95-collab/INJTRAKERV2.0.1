@@ -117,6 +117,8 @@ body {
   font-weight: bold;
 }
 
+/* ... mantieni tutto il resto ... */
+
 /* Price bar */
 .price-bar-container {
   position: relative;
@@ -132,18 +134,19 @@ body {
   top: 0;
   height: 100%;
   width: 0%;
+  left: 50%;
+  transform: translateX(-50%);
   background: #22c55e;
   transition: width 0.2s linear, left 0.2s linear, background 0.2s;
 }
 
-.price-bar::before {
-  content: '';
+.price-line-current {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 4px;
   height: 100%;
-  background: #22c55e; /* striscia verde a sinistra */
+  width: 2px;
+  background: #facc15; /* linea gialla */
+  transition: left 0.2s linear;
 }
 
 .price-line-open {
@@ -202,3 +205,4 @@ body {
 @media (max-width: 768px) {
   .cards-wrapper { flex-direction: column; }
 }
+
