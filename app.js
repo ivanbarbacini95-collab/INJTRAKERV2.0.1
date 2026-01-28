@@ -1,15 +1,15 @@
 let address = localStorage.getItem("inj_address") || "";
 
 // Variabili
-let displayedPrice = 0, targetPrice = 0;
-let price24hOpen = 1, price24hLow = 1, price24hHigh = 1; // inizializzate a 1
+let displayedPrice = 0, targetPrice = 0, price24hOpen = 0;
+let price24hLow = 0, price24hHigh = 0;
 let stakeInj = 0, displayedStake = 0;
 let rewardsInj = 0, displayedRewards = 0;
 let availableInj = 0, displayedAvailable = 0;
-let aprValue = 0;
+let apr = 0;
 
-// Flag dati caricati
-let dataLoaded = false;
+// Chart
+let chart, chartData = [];
 
 // Elementi DOM
 const addressInput = document.getElementById("addressInput");
@@ -36,26 +36,12 @@ const rewardPercentEl = document.getElementById("rewardPercent");
 const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
-let arrowTimeout;
-
 // Helper fetch
-const fetchJSON = async url => { 
-  try { 
-    const res = await fetch(url); 
-    return await res.json(); 
-  } catch(e) { 
-    console.error("Fetch error:", url, e); 
-    return {}; 
-  }
-};
+const fetchJSON = async url => { try{ const res = await fetch(url); return await res.json(); } catch(e){ console.error("Fetch error:", url,e); return {}; }};
 
 // Input
 addressInput.value = address;
-addressInput.onchange = e => { 
-  address = e.target.value.trim(); 
-  localStorage.setItem("inj_address", address); 
-  loadData(); 
-};
+addressInput.onchange = e => { address = e.target.value.trim(); localStorage.setItem("inj_address", address); loadData(); };
 
 // Load data Injective
 async function loadData(){
@@ -75,52 +61,129 @@ async function loadData(){
     const poolRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
     const bonded = Number(poolRes.pool?.bonded_tokens||0);
     const notBonded = Number(poolRes.pool?.not_bonded_tokens||0);
-    aprValue = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
-
-    dataLoaded = true; // segnala che i dati reali sono presenti
+    apr = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
   } catch(e){ console.error("Errore dati Injective:",e);}
 }
 loadData();
 setInterval(loadData,60000);
 
-// Animate digits robusto
-function animateDigits(element, current, target, decimals = 4) {
-    current = Number(current) || 0;
-    target = Number(target) || 0;
+// Price history
+async function fetchHistory(){
+  try{
+    const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96");
+    const d = await res.json();
+    chartData = d.map(c=>+c[4]);
+    price24hOpen = +d[0][1];
+    price24hLow = Math.min(...chartData);
+    price24hHigh = Math.max(...chartData);
+    targetPrice = chartData.at(-1);
+    drawChart();
+  } catch(e){ console.error("Errore price history:", e);}
+}
+fetchHistory();
 
-    if(current.toFixed(decimals) === target.toFixed(decimals)) {
-        element.innerHTML = target.toFixed(decimals);
-        element.style.color = "#f9fafb";
-        return target;
-    }
-
-    const step = (target - current) * 0.1;
-    const next = current + step;
-
-    const currentStr = current.toFixed(decimals);
-    const nextStr = next.toFixed(decimals);
-    let html = "";
-
-    for(let i = 0; i < nextStr.length; i++) {
-        if(currentStr[i] !== nextStr[i]) {
-            const isUp = next > current;
-            html += `<span style="color:${isUp ? "#22c55e" : "#ef4444"}">${nextStr[i]}</span>`;
-        } else {
-            html += `<span style="color:#f9fafb">${nextStr[i]}</span>`;
-        }
-    }
-
-    element.innerHTML = html;
-    return next;
+// Draw chart
+function drawChart(){
+  const ctx = document.getElementById("priceChart");
+  if(chart) chart.destroy();
+  chart = new Chart(ctx,{
+    type:"line",
+    data:{labels:chartData.map((_,i)=>i),datasets:[{data:chartData,borderColor:"#22c55e",tension:0.3,fill:true}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{display:false}}}
+  });
 }
 
-// Animazione principale
+// Binance WS
+function startWS(){
+  const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
+  ws.onmessage = e => { const p=+JSON.parse(e.data).p; targetPrice=p; if(p>price24hHigh) price24hHigh=p; if(p<price24hLow) price24hLow=p; };
+  ws.onclose = ()=>setTimeout(startWS,3000);
+}
+startWS();
+
+// ==== Animate numbers cifra per cifra ====
+let prevValues = {price:0, available:0, stake:0, rewards:0, apr:0};
+
+function animateNumber(el, target, key, decimals=4){
+  const current = prevValues[key];
+  const diff = target - current;
+  const step = diff / 5;
+  if(Math.abs(diff)<0.00001) return target;
+  let i = 0;
+  function animateStep(){
+    if(i>=5) return;
+    const val = prevValues[key] + step;
+    el.innerText = val.toFixed(decimals);
+    el.style.color = step>0?"#22c55e":step<0?"#ef4444":"#f9fafb";
+    prevValues[key] = val;
+    i++;
+    requestAnimationFrame(animateStep);
+  }
+  animateStep();
+  return target;
+}
+
+// Animate loop
 function animate(){
-    if(!dataLoaded) { requestAnimationFrame(animate); return; }
+  // Price
+  displayedPrice = animateNumber(priceEl, targetPrice, "price", 4);
 
-    // esempio: price
-    displayedPrice = animateDigits(priceEl, displayedPrice, targetPrice, 4);
+  // Freccia prezzo
+  if(targetPrice>prevValues.price){
+    priceArrowEl.className = "price-arrow up";
+    priceArrowEl.innerText = "▲";
+  } else if(targetPrice<prevValues.price){
+    priceArrowEl.className = "price-arrow down";
+    priceArrowEl.innerText = "▼";
+  } else {
+    priceArrowEl.style.opacity = 0;
+  }
 
-    requestAnimationFrame(animate);
+  // 24h %
+  const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
+  price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
+  price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
+
+  // Barra prezzo
+  const center=50;
+  const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
+  let linePos;
+  if(displayedPrice>=price24hOpen){
+    linePos=center+percent;
+    priceBarEl.style.left=`${center}%`;
+    priceBarEl.style.width=`${linePos-center}%`;
+    priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
+  } else{
+    linePos=center-percent;
+    priceBarEl.style.left=`${linePos}%`;
+    priceBarEl.style.width=`${center-linePos}%`;
+    priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
+  }
+  priceLineEl.style.left=`${linePos}%`;
+
+  // Min/Open/Max
+  priceMinEl.innerText=price24hLow.toFixed(4);
+  priceMaxEl.innerText=price24hHigh.toFixed(4);
+  priceOpenEl.innerText=price24hOpen.toFixed(4);
+
+  // Altri numeri
+  displayedAvailable = animateNumber(availableEl, availableInj, "available", 6);
+  availableUsdEl.innerText = (displayedAvailable*displayedPrice).toFixed(2);
+
+  displayedStake = animateNumber(stakeEl, stakeInj, "stake", 4);
+  stakeUsdEl.innerText = (displayedStake*displayedPrice).toFixed(2);
+
+  displayedRewards = animateNumber(rewardsEl, rewardsInj, "rewards", 6);
+  rewardsUsdEl.innerText = (displayedRewards*displayedPrice).toFixed(2);
+
+  const rewardPercent = Math.min(displayedRewards/0.05*100,100);
+  rewardBarEl.style.width=rewardPercent+"%";
+
+  apr = animateNumber(aprEl, apr, "apr", 2);
+
+  // Last update
+  updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
+
+  requestAnimationFrame(animate);
 }
 animate();
