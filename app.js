@@ -122,11 +122,17 @@ function animateNumberCifre(el, oldVal, newVal, fixed){
   for(let i=0;i<newStr.length;i++){
     const span = document.createElement("span");
     span.innerText = newStr[i];
-    if(oldStr[i] && oldStr[i]!==newStr[i]){
+
+    // Solo se il carattere è un numero e cambia
+    if(!isNaN(newStr[i]) && oldStr[i] && oldStr[i] !== newStr[i]){
       span.style.transition = "color 0.3s";
-      span.style.color = newStr[i]>oldStr[i] ? "#22c55e" : "#ef4444";
+      if(newStr[i] > oldStr[i]) span.style.color = "#22c55e"; // verde
+      else span.style.color = "#ef4444"; // rosso
+
+      // Torna neutro dopo 400ms
       setTimeout(()=>{ span.style.color = ""; },400);
     }
+
     el.appendChild(span);
   }
 }
