@@ -135,11 +135,26 @@ function animate(){
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
-  // Barra prezzo corretta
+  // BARRA DEL PREZZO CENTRATA
   if(price24hHigh > price24hLow){
-    const pct = ((displayedPrice - price24hLow) / (price24hHigh - price24hLow)) * 100;
-    $("priceBar").style.width = pct + "%";
-    $("priceLine").style.left = ((price24hOpen - price24hLow) / (price24hHigh - price24hLow) * 100) + "%";
+    const delta = displayedPrice - price24hOpen; // differenza dal prezzo di apertura
+    const maxDelta = Math.max(price24hHigh - price24hOpen, price24hOpen - price24hLow);
+    const pct = Math.min(Math.abs(delta) / maxDelta, 1) * 50; // 50% max a destra o sinistra
+
+    // colore verde o rosso
+    $("priceBar").style.background = delta>=0 ? "#22c55e" : "#ef4444";
+
+    if(delta >= 0){
+      $("priceBar").style.left = "50%";
+      $("priceBar").style.width = pct + "%";
+    } else {
+      $("priceBar").style.left = (50 - pct) + "%"; // cresce verso sinistra
+      $("priceBar").style.width = pct + "%";
+    }
+
+    // linea gialla sempre sul prezzo attuale
+    const linePct = ((displayedPrice - price24hLow) / (price24hHigh - price24hLow)) * 100;
+    $("priceLine").style.left = linePct + "%";
   }
 
   // Account animato
@@ -155,7 +170,7 @@ function animate(){
   colorNumber($("rewards"),displayedRewards,rewardsInj,7);
   $("rewardsUsd").textContent=`≈ $${(displayedRewards*displayedPrice).toFixed(2)}`;
 
-  // Reward bar (fissa il massimo come esempio)
+  // Reward bar (massimo fisso come esempio)
   $("rewardBar").style.width=Math.min(displayedRewards/0.05*100,100)+"%";
   $("rewardPercent").textContent=(displayedRewards/0.05*100).toFixed(1)+"%";
 
