@@ -6,24 +6,11 @@
 <title>Injective Dashboard</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js"></script>
 </head>
 <body>
 <div class="container">
 
-  <div class="header">
-    <h1>Injective Dashboard</h1>
-    <div class="tf-selector">
-      <div class="tf-icon">⏱</div>
-      <div class="tf-menu">
-        <div data-tf="1h" class="active">1h</div>
-        <div data-tf="12h">12h</div>
-        <div data-tf="1d">1d</div>
-        <div data-tf="1w">1w</div>
-        <div data-tf="1M">1M</div>
-      </div>
-    </div>
-  </div>
+  <h1>Injective Dashboard</h1>
 
   <input type="text" id="addressInput" placeholder="Inserisci indirizzo INJ">
 
@@ -72,7 +59,7 @@
     </div>
 
     <div class="card chart-card">
-      <div class="label">Grafico</div>
+      <div class="label">Grafico 24h</div>
       <canvas id="priceChart"></canvas>
     </div>
 
