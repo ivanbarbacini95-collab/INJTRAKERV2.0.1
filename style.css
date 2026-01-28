@@ -183,21 +183,26 @@ body {
 }
 
 .status.online .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   background: #22c55e;
-  animation: blink 1,5s infinite;
+  animation: blink 1.5s infinite; /* più lento */
 }
 
 .status.offline .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
   background: #ef4444;
-  animation: none;
+  animation: blink 1.5s infinite; /* più lento anche rosso */
 }
-
-.status.online .text { color: #22c55e; }
-.status.offline .text { color: #ef4444; }
 
 @keyframes blink {
   0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0.3; }
+  25%, 75% { opacity: 0; }
 }
+
+
 
 
