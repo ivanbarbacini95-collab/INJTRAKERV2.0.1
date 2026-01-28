@@ -1,22 +1,13 @@
 // --- Variabili iniziali ---
 let address = localStorage.getItem("inj_address") || "";
+let displayedPrice=0, targetPrice=0, price24hOpen=0, price24hLow=0, price24hHigh=0;
+let stakeInj=0, displayedStake=0;
+let rewardsInj=0, displayedRewards=0;
+let availableInj=0, displayedAvailable=0;
+let apr=0;
+let chart, chartData=[];
 
-// Price
-let displayedPrice = 0, targetPrice = 0, price24hOpen = 0;
-let price24hLow = 0, price24hHigh = 0;
-
-// Stake / Rewards / Available
-let stakeInj = 0, displayedStake = 0;
-let rewardsInj = 0, displayedRewards = 0;
-let availableInj = 0, displayedAvailable = 0;
-
-// APR
-let apr = 0;
-
-// Chart
-let chart, chartData = [];
-
-// DOM
+// DOM Elements
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
 const price24hEl = document.getElementById("price24h");
@@ -41,11 +32,18 @@ const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
 // --- Helpers ---
-const fetchJSON = async url => { try { return await (await fetch(url)).json(); } catch(e){ console.error(e); return {}; } };
+const fetchJSON = async url => {
+  try { const res = await fetch(url); return await res.json(); } 
+  catch(e){ console.error("Fetch error:", url,e); return {}; }
+};
 
 // --- Address Input ---
 addressInput.value = address;
-addressInput.onchange = e => { address = e.target.value.trim(); localStorage.setItem("inj_address", address); loadData(); };
+addressInput.onchange = e => {
+  address = e.target.value.trim();
+  localStorage.setItem("inj_address", address);
+  loadData();
+};
 
 // --- Load Injective Data ---
 async function loadData(){
@@ -66,12 +64,12 @@ async function loadData(){
     const bonded = Number(poolRes.pool?.bonded_tokens||0);
     const notBonded = Number(poolRes.pool?.not_bonded_tokens||0);
     apr = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
-  } catch(e){ console.error(e); }
+  } catch(e){ console.error("Errore dati Injective:",e);}
 }
 loadData();
-setInterval(loadData,2000);
+setInterval(loadData,60000);
 
-// --- Fetch Price History (24h) ---
+// --- Fetch Price History 24h ---
 async function fetchHistory(){
   try{
     const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=1h&limit=24`);
@@ -82,18 +80,22 @@ async function fetchHistory(){
     price24hHigh = Math.max(...chartData);
     targetPrice = chartData.at(-1);
     drawChart();
-  } catch(e){ console.error(e); }
+  } catch(e){ console.error("Errore price history:", e);}
 }
 fetchHistory();
+setInterval(fetchHistory,60000);
 
-// --- Draw Chart ---
+// --- Draw Line Chart ---
 function drawChart(){
   const ctx = document.getElementById("priceChart");
   if(chart) chart.destroy();
+
   const gradient = ctx.getContext('2d').createLinearGradient(0,0,0,200);
-  gradient.addColorStop(0,'rgba(34,197,94,0.3)');
-  gradient.addColorStop(1,'rgba(34,197,94,0)');
-  const lineColor = targetPrice>=price24hOpen?"#22c55e":"#ef4444";
+  gradient.addColorStop(0, 'rgba(34,197,94,0.3)');
+  gradient.addColorStop(1, 'rgba(34,197,94,0)');
+
+  const lineColor = targetPrice>=price24hOpen ? "#22c55e" : "#ef4444";
+
   chart = new Chart(ctx,{
     type:"line",
     data:{
@@ -114,8 +116,10 @@ function drawChart(){
       maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false}},
-      scales:{x:{display:true,ticks:{color:"#9ca3af"},grid:{color:"#1e293b"}},
-              y:{display:true,ticks:{color:"#9ca3af"},grid:{color:"#1e293b"}}}
+      scales:{
+        x:{display:true,grid:{color:"#1e293b"},ticks:{color:"#9ca3af"}},
+        y:{display:true,grid:{color:"#1e293b"},ticks:{color:"#9ca3af"}}
+      }
     }
   });
 }
@@ -123,75 +127,92 @@ function drawChart(){
 // --- Binance WS ---
 function startWS(){
   const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage = e => { const p=+JSON.parse(e.data).p; targetPrice=p; if(p>price24hHigh) price24hHigh=p; if(p<price24hLow) price24hLow=p; };
-  ws.onclose = ()=>setTimeout(startWS,3000);
+  ws.onmessage = e => {
+    const p = +JSON.parse(e.data).p;
+    targetPrice = p;
+    if(p>price24hHigh) price24hHigh=p;
+    if(p<price24hLow) price24hLow=p;
+  };
+  ws.onclose=()=>setTimeout(startWS,3000);
 }
 startWS();
 
-// --- Animate Numbers ---
+// --- Animate Numbers & Bars ---
 function animate(){
   const lerp = (a,b,f)=>a+(b-a)*f;
 
-  // Price
-  const oldPrice = displayedPrice;
-  displayedPrice=lerp(displayedPrice,targetPrice,0.1);
-  if(Math.abs(displayedPrice-oldPrice)>0.00001){ colorNumber(priceEl,displayedPrice,oldPrice,4);
-    const delta=((displayedPrice-price24hOpen)/price24hOpen)*100;
-    price24hEl.innerText=(delta>0?"▲ ":"▼ ")+Math.abs(delta).toFixed(2)+"%";
-    price24hEl.className="sub "+(delta>0?"up":delta<0?"down":""); }
+  function colorNumber(el,newVal,oldVal,decimals=4){
+    const oldStr = oldVal.toFixed(decimals);
+    const newStr = newVal.toFixed(decimals);
+    let html = "";
+    for(let i=0;i<newStr.length;i++){
+      if(newStr[i]!==oldStr[i]){
+        html += `<span style="color:${newVal>oldVal?'#22c55e':'#ef4444'}">${newStr[i]}</span>`;
+      } else html += `<span>${newStr[i]}</span>`;
+    }
+    el.innerHTML = html;
+  }
 
-  // Price bar
+  // --- PRICE ---
+  const oldPrice = displayedPrice;
+  displayedPrice = lerp(displayedPrice,targetPrice,0.1);
+  colorNumber(priceEl, displayedPrice, oldPrice,4);
+
+  const delta=((displayedPrice-price24hOpen)/price24hOpen)*100;
+  price24hEl.innerText=(delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
+  price24hEl.className="sub "+(delta>0?"up":delta<0?"down":"");
+
+  // --- PRICE BAR ---
   const center=50;
   const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
-  let linePos=displayedPrice>=price24hOpen?center+percent:center-percent;
-  priceBarEl.style.left=`${displayedPrice>=price24hOpen?center:linePos}%`;
-  priceBarEl.style.width=`${displayedPrice>=price24hOpen?linePos-center:center-linePos}%`;
-  priceBarEl.style.background=displayedPrice>=price24hOpen?"linear-gradient(to right,#22c55e,#10b981)":"linear-gradient(to right,#ef4444,#f87171)";
+  let linePos;
+  if(displayedPrice>=price24hOpen){
+    linePos=center+percent;
+    priceBarEl.style.left=`${center}%`;
+    priceBarEl.style.width=`${linePos-center}%`;
+    priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
+  } else{
+    linePos=center-percent;
+    priceBarEl.style.left=`${linePos}%`;
+    priceBarEl.style.width=`${center-linePos}%`;
+    priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
+  }
   priceLineEl.style.left=`${linePos}%`;
 
-  priceMinEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hLow.toFixed(3)}</span>`;
-  priceOpenEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hOpen.toFixed(3)}</span>`;
-  priceMaxEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hHigh.toFixed(3)}</span>`;
+  priceMinEl.innerText = price24hLow.toFixed(3);
+  priceOpenEl.innerText = price24hOpen.toFixed(3);
+  priceMaxEl.innerText = price24hHigh.toFixed(3);
 
-  // Available
-  const oldAvailable=displayedAvailable;
-  displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
-  colorNumber(availableEl,displayedAvailable,oldAvailable,6);
+  // --- AVAILABLE ---
+  const oldAvailable = displayedAvailable;
+  displayedAvailable = lerp(displayedAvailable, availableInj,0.1);
+  colorNumber(availableEl, displayedAvailable, oldAvailable,6);
   availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
-  // Stake
-  const oldStake=displayedStake;
-  displayedStake=lerp(displayedStake,stakeInj,0.1);
-  colorNumber(stakeEl,displayedStake,oldStake,4);
+  // --- STAKE ---
+  const oldStake = displayedStake;
+  displayedStake = lerp(displayedStake, stakeInj,0.1);
+  colorNumber(stakeEl, displayedStake, oldStake,4);
   stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
-  // Rewards
-  const oldRewards=displayedRewards;
-  displayedRewards=lerp(displayedRewards,rewardsInj,0.1);
-  colorNumber(rewardsEl,displayedRewards,oldRewards,7);
+  // --- REWARDS ---
+  const oldRewards = displayedRewards;
+  displayedRewards = lerp(displayedRewards,rewardsInj,0.1);
+  colorNumber(rewardsEl, displayedRewards, oldRewards,7);
   rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
 
-  const rewardPercent=Math.min(displayedRewards/0.05*100,100);
-  rewardBarEl.style.width=rewardPercent+"%";
-  rewardPercentEl.innerText=rewardPercent.toFixed(1)+"%";
+  // Reward bar da sinistra a destra
+  const rewardPercent = Math.min(displayedRewards/0.05*100,100);
+  rewardBarEl.style.width = rewardPercent + "%";
+  rewardBarEl.style.left = "0%";
+  rewardPercentEl.innerText = rewardPercent.toFixed(1)+"%";
 
-  // APR
-  aprEl.innerText=apr.toFixed(2)+"%";
+  // --- APR ---
+  aprEl.innerText = apr.toFixed(2)+"%";
 
-  // Last update
+  // --- LAST UPDATE ---
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
 }
 animate();
-
-// --- Color Number ---
-function colorNumber(el,value,oldValue,decimals){
-  const newVal=value.toFixed(decimals);
-  const oldVal=oldValue.toFixed(decimals);
-  let html='';
-  for(let i=0;i<newVal.length;i++){
-    html+=`<span style="color:${newVal[i]!==oldVal[i]?newVal[i]>oldVal[i]?'#22c55e':'#ef4444':'#f9fafb'}">${newVal[i]}</span>`;
-  }
-  el.innerHTML=html;
-}
