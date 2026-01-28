@@ -8,12 +8,10 @@ let displayedAvailable = 0, displayedStake = 0, displayedRewards = 0;
 let apr = 0;
 
 let chart, chartData = [], ws;
-let lastChartUpdate = Date.now();
 
 const $ = id => document.getElementById(id);
 const lerp = (a,b,f)=>a+(b-a)*f;
 
-// Colora ogni cifra cambiata
 function colorNumber(el, n, o, d){
   const ns=n.toFixed(d), os=o.toFixed(d);
   el.innerHTML=[...ns].map((c,i)=>
@@ -28,7 +26,7 @@ async function fetchJSON(url){
   catch{ return {}; }
 }
 
-/* --- ADDRESS INPUT --- */
+/* ADDRESS */
 $("addressInput").value = address;
 $("addressInput").onchange = e=>{
   address=e.target.value.trim();
@@ -36,7 +34,7 @@ $("addressInput").onchange = e=>{
   loadAccount();
 };
 
-/* --- ACCOUNT DATA --- */
+/* ACCOUNT */
 async function loadAccount(){
   if(!address) return;
 
@@ -59,10 +57,10 @@ async function loadAccount(){
 loadAccount();
 setInterval(loadAccount,60000);
 
-/* --- HISTORY CHART 24H --- */
+/* HISTORY */
 async function fetchHistory(){
   const d = await fetchJSON(
-    "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=5m&limit=288"
+    "https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=5m&limit=288" // 24h/5min
   );
   chartData = d.map(c=>+c[4]);
   price24hOpen = +d[0][1];
@@ -72,8 +70,9 @@ async function fetchHistory(){
   if(!chart) initChart();
 }
 fetchHistory();
+setInterval(fetchHistory, 300000); // aggiorna ogni 5min
 
-/* --- CHART INIT --- */
+/* CHART */
 function initChart(){
   const ctx=$("priceChart").getContext("2d");
   chart=new Chart(ctx,{
@@ -87,143 +86,116 @@ function initChart(){
       scales:{x:{display:false},y:{ticks:{color:"#9ca3af"}}}}
   });
 }
-
-function updateChart(price){
-  const now = Date.now();
-  if(now - lastChartUpdate >= 300000){ // ogni 5 minuti
-    chart.data.datasets[0].data.push(price);
-    chart.data.datasets[0].data.shift();
-    chart.update("none");
-    lastChartUpdate = now;
-  }
+function updateChart(p){
+  if(!chart) return;
+  chart.data.datasets[0].data.push(p);
+  chart.data.datasets[0].data.shift();
+  chart.update("none");
 }
 
-/* --- WEBSOCKET --- */
+/* WS */
 function startWS(){
   if(ws) ws.close();
   ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
+  
+  ws.onopen = () => updateOnlineStatus(true);
+  ws.onclose = () => {
+    updateOnlineStatus(false);
+    setTimeout(startWS,3000);
+  }
+  ws.onerror = () => updateOnlineStatus(false);
 
-  ws.onopen = ()=>setStatus(true);
-  ws.onclose = ()=>{ setStatus(false); setTimeout(startWS,3000); };
-  ws.onerror = ()=>setStatus(false);
-
-  ws.onmessage = e=>{
+  ws.onmessage=e=>{
     const p=+JSON.parse(e.data).p;
-    targetPrice = p;
-    price24hHigh = Math.max(price24hHigh,p);
-    price24hLow = Math.min(price24hLow,p);
+    targetPrice=p;
+    price24hHigh=Math.max(price24hHigh,p);
+    price24hLow=Math.min(price24hLow,p);
+    updateChart(p);
   };
 }
 startWS();
 
-/* --- ONLINE/OFFLINE STATUS --- */
-function setStatus(online){
-  let statusDiv = document.getElementById("status");
-  if(!statusDiv){
-    statusDiv = document.createElement("div");
-    statusDiv.id = "status";
-    statusDiv.style.position = "absolute";
-    statusDiv.style.top = "1rem";
-    statusDiv.style.right = "1rem";
-    statusDiv.style.display = "flex";
-    statusDiv.style.alignItems = "center";
-    statusDiv.style.gap = "0.4rem";
-    document.body.appendChild(statusDiv);
-
-    const dot = document.createElement("div");
-    dot.className = "dot";
-    dot.style.width = "10px";
-    dot.style.height = "10px";
-    dot.style.borderRadius = "50%";
-    dot.style.animation = "blink 1.5s infinite";
-    statusDiv.appendChild(dot);
-
-    const text = document.createElement("span");
-    text.id = "statusText";
-    text.style.fontSize = "0.9rem";
-    statusDiv.appendChild(text);
+/* ONLINE/OFFLINE */
+function updateOnlineStatus(online){
+  let dot = document.querySelector(".online-dot");
+  if(!dot){
+    dot=document.createElement("div");
+    dot.className="online-dot";
+    dot.style.position="absolute";
+    dot.style.top="1rem";
+    dot.style.right="1rem";
+    dot.style.width="12px";
+    dot.style.height="12px";
+    dot.style.borderRadius="50%";
+    dot.style.fontSize="10px";
+    dot.style.color="#fff";
+    dot.style.display="flex";
+    dot.style.alignItems="center";
+    dot.style.justifyContent="center";
+    dot.style.paddingLeft="1.5rem";
+    document.body.appendChild(dot);
   }
-
-  const dot = statusDiv.querySelector(".dot");
-  const text = statusDiv.querySelector("#statusText");
   if(online){
-    dot.style.background = "#22c55e";
-    text.textContent = "Online";
+    dot.textContent="ONLINE";
+    dot.style.backgroundColor="#22c55e";
+    dot.style.animation="blink 1.5s infinite";
   } else {
-    dot.style.background = "#ef4444";
-    text.textContent = "Offline";
+    dot.textContent="OFFLINE";
+    dot.style.backgroundColor="#ef4444";
+    dot.style.animation="none";
   }
 }
 
-/* --- ANIMATION LOOP --- */
+/* ANIMATION LOOP */
 function animate(){
-  // --- PRICE SMOOTH ---
-  const oldPrice = displayedPrice;
-  displayedPrice = lerp(displayedPrice,targetPrice,0.05);
+  const old=displayedPrice;
+  displayedPrice=lerp(displayedPrice,targetPrice,0.05); // più lento
+  colorNumber($("price"),displayedPrice,old,4);
 
-  // Numero e percentuale
-  colorNumber($("price"),displayedPrice,oldPrice,4);
   const d=((displayedPrice-price24hOpen)/price24hOpen)*100;
   $("price24h").textContent=`${d>0?"▲":"▼"} ${Math.abs(d).toFixed(2)}%`;
   $("price24h").className="sub "+(d>0?"up":"down");
 
-  // Min/Open/Max
   $("priceMin").textContent=price24hLow.toFixed(3);
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
-  // Aggiornamento barra prezzo
-function updatePriceBar() {
-  const priceRange = price24hHigh - price24hLow;
-  if (priceRange === 0) return;
-
-  // Percentuale del prezzo corrente rispetto a min-max 24h
-  const percent = (displayedPrice - price24hOpen) / priceRange * 50; // metà a dx/sx
-  const center = 50; // centro della barra
-
-  if (displayedPrice >= price24hOpen) {
-    // sopra apertura → barra verde a destra
-    $("priceBarGreen").style.left = "50%";
-    $("priceBarGreen").style.width = Math.min(percent*2,50) + "%"; // non oltre metà container
-    $("priceBarRed").style.width = "0%";
-  } else {
-    // sotto apertura → barra rossa a sinistra
-    $("priceBarRed").style.left = 50 + percent + "%"; // left si sposta indietro
-    $("priceBarRed").style.width = Math.min(-percent*2,50) + "%";
-    $("priceBarGreen").style.width = "0%";
-  }
-
-  // linea gialla al prezzo corrente
-  const linePercent = ((displayedPrice - price24hLow) / priceRange) * 100;
-  $("priceLine").style.left = linePercent + "%";
-}
-
-  $("priceLine").style.left = currentPercent + "%";
-
-  // --- AVAILABLE/STAKED/REWARDS ---
-  displayedAvailable = lerp(displayedAvailable,availableInj,0.05);
+  displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
   colorNumber($("available"),displayedAvailable,availableInj,6);
   $("availableUsd").textContent=`≈ $${(displayedAvailable*displayedPrice).toFixed(2)}`;
 
-  displayedStake = lerp(displayedStake,stakeInj,0.05);
+  displayedStake=lerp(displayedStake,stakeInj,0.1);
   colorNumber($("stake"),displayedStake,stakeInj,4);
   $("stakeUsd").textContent=`≈ $${(displayedStake*displayedPrice).toFixed(2)}`;
 
-  displayedRewards = lerp(displayedRewards,rewardsInj,0.05);
+  displayedRewards=lerp(displayedRewards,rewardsInj,0.1);
   colorNumber($("rewards"),displayedRewards,rewardsInj,7);
   $("rewardsUsd").textContent=`≈ $${(displayedRewards*displayedPrice).toFixed(2)}`;
 
   $("rewardBar").style.width=Math.min(displayedRewards/0.05*100,100)+"%";
   $("rewardPercent").textContent=(displayedRewards/0.05*100).toFixed(1)+"%";
 
-  // --- APR ---
   $("apr").textContent=apr.toFixed(2)+"%";
-
-  // --- LAST UPDATE ---
   $("updated").textContent="Last update: "+new Date().toLocaleTimeString();
 
-  // --- UPDATE CHART ---
-  updateChart(displayedPrice);
+  // ------------------------
+  // BARRA PREZZO CENTRATA
+  // ------------------------
+  const priceRange = price24hHigh - price24hLow;
+  if(priceRange>0){
+    const percent = (displayedPrice - price24hOpen) / priceRange * 50; // metà container
+    if(displayedPrice>=price24hOpen){
+      $("priceBarGreen").style.left="50%";
+      $("priceBarGreen").style.width = Math.min(percent*2,50)+"%";
+      $("priceBarRed").style.width="0%";
+    } else {
+      $("priceBarRed").style.left = 50 + percent + "%"; // percent è negativo
+      $("priceBarRed").style.width = Math.min(-percent*2,50)+"%";
+      $("priceBarGreen").style.width="0%";
+    }
+    const linePercent = ((displayedPrice - price24hLow)/priceRange)*100;
+    $("priceLine").style.left = linePercent + "%";
+  }
 
   requestAnimationFrame(animate);
 }
