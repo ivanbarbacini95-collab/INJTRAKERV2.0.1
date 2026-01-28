@@ -107,7 +107,7 @@ function startWS(){
 }
 startWS();
 
-/* PRICE BAR LOGIC */
+/* PRICE BAR LOGIC CON GRADIENTE */
 function updatePriceBar() {
   const min = price24hLow;
   const max = price24hHigh;
@@ -123,8 +123,12 @@ function updatePriceBar() {
   linePercent = Math.max(0,Math.min(100,linePercent));
   $("priceLine").style.left = linePercent + "%";
 
-  const barColor = price >= open ? "#22c55e" : "#ef4444";
-  $("priceBar").style.background = barColor;
+  // Gradiente dinamico
+  if(price >= open){
+    $("priceBar").style.background = "linear-gradient(to right, #22c55e, #10b981)";
+  } else {
+    $("priceBar").style.background = "linear-gradient(to right, #ef4444, #f87171)";
+  }
 
   let barWidth, barLeft;
   if(price >= open){
@@ -166,7 +170,9 @@ function animate(){
   colorNumber($("rewards"),displayedRewards,rewardsInj,7);
   $("rewardsUsd").textContent=`≈ $${(displayedRewards*displayedPrice).toFixed(2)}`;
 
-  $("rewardBar").style.width=Math.min(displayedRewards/0.05*100,100)+"%";
+  // Gradiente barra rewards
+  $("rewardBar").style.background = "linear-gradient(to right, #0ea5e9, #3b82f6)";
+  $("rewardBar").style.width = Math.min(displayedRewards/0.05*100,100)+"%";
   $("rewardPercent").textContent=(displayedRewards/0.05*100).toFixed(1)+"%";
 
   $("apr").textContent=apr.toFixed(2)+"%";
