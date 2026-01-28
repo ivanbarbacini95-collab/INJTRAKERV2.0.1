@@ -1,10 +1,10 @@
-/* GENERALE */
 body {
   font-family: Inter, sans-serif;
   background: #000;
   color: #f9fafb;
   margin: 0;
   padding: 1rem;
+  position: relative;
 }
 
 .container {
@@ -93,20 +93,36 @@ body {
   overflow: hidden;
 }
 
-.price-bar {
+/* Verde a destra */
+.price-bar-green {
   position: absolute;
   height: 100%;
-  width: 0;
-  background: #22c55e; /* verde iniziale */
+  left: 50%;
+  width: 0%;
+  background: linear-gradient(to right, #22c55e, #10b981);
+  border-radius: 0 4px 4px 0;
 }
 
+/* Rossa a sinistra */
+.price-bar-red {
+  position: absolute;
+  height: 100%;
+  left: 50%;
+  width: 0%;
+  background: linear-gradient(to left, #ef4444, #f87171);
+  border-radius: 4px 0 0 4px;
+}
+
+/* Linea gialla */
 .price-line {
   position: absolute;
   width: 2px;
   height: 100%;
-  background: #facc15; /* giallo */
+  background: #facc15;
+  left: 50%;
 }
 
+/* Valori min/open/max */
 .price-values {
   font-size: 0.8rem;
   color: #9ca3af;
@@ -129,9 +145,7 @@ body {
 
 .reward-bar {
   height: 100%;
-  width: 0;
   background: linear-gradient(to right, #0ea5e9, #3b82f6);
-  transition: width 0.3s ease;
 }
 
 .reward-percent {
@@ -152,57 +166,19 @@ body {
   height: 100% !important;
 }
 
-/* MISC */
+/* NUMERI UP/DOWN */
 .up { color: #22c55e; }
 .down { color: #ef4444; }
 
+/* LAST UPDATE */
 .last-update {
   font-size: 0.8rem;
   text-align: center;
   color: #9ca3af;
 }
 
-/* STATUS INDICATOR */
-.status {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  font-weight: bold;
-}
-
-.status .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #22c55e;
-  animation: blink 1s infinite;
-}
-
-.status.online .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #22c55e;
-  animation: blink 1.5s infinite; /* più lento */
-}
-
-.status.offline .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ef4444;
-  animation: blink 1.5s infinite; /* più lento anche rosso */
-}
-
+/* PALLINO ONLINE/OFFLINE */
 @keyframes blink {
   0%, 50%, 100% { opacity: 1; }
-  25%, 75% { opacity: 0; }
+  25%, 75% { opacity: 0.2; }
 }
-
-
-
-
