@@ -1,184 +1,157 @@
 let address = localStorage.getItem("inj_address") || "";
 
-// Variabili principali
-let displayedPrice=0,targetPrice=0,price24hOpen=0,price24hLow=0,price24hHigh=0;
-let stakeInj=0,displayedStake=0,rewardsInj=0,displayedRewards=0,availableInj=0,displayedAvailable=0;
-let apr=0, rewardMax=0.05;
+// Variabili
+let displayedPrice = 0, targetPrice = 0, price24hOpen = 0;
+let price24hLow = 0, price24hHigh = 0;
+let stakeInj = 0, displayedStake = 0;
+let rewardsInj = 0, displayedRewards = 0;
+let availableInj = 0, displayedAvailable = 0;
+let apr = 0;
 
-// DOM
-const addressInput=document.getElementById("addressInput");
-const priceEl=document.getElementById("price");
-const price24hEl=document.getElementById("price24h");
-const priceBarEl=document.getElementById("priceBar");
-const priceLineEl=document.getElementById("priceLine");
-const priceMinEl=document.getElementById("priceMin");
-const priceMaxEl=document.getElementById("priceMax");
-const priceOpenEl=document.getElementById("priceOpen");
+// Chart
+let chart, chartData = [];
 
-const availableEl=document.getElementById("available");
-const availableUsdEl=document.getElementById("availableUsd");
+// Elementi DOM
+const addressInput = document.getElementById("addressInput");
+const priceEl = document.getElementById("price");
+const price24hEl = document.getElementById("price24h");
+const priceBarEl = document.getElementById("priceBar");
+const priceLineEl = document.getElementById("priceLine");
+const priceMinEl = document.getElementById("priceMin");
+const priceMaxEl = document.getElementById("priceMax");
+const priceOpenEl = document.getElementById("priceOpen");
 
-const stakeEl=document.getElementById("stake");
-const stakeUsdEl=document.getElementById("stakeUsd");
-const stakeDailyEl=document.getElementById("stakeDaily");
-const stakeBarEl=document.getElementById("stakeBar");
-const stakeLineEl=document.getElementById("stakeLine");
+const availableEl = document.getElementById("available");
+const availableUsdEl = document.getElementById("availableUsd");
 
-const rewardsEl=document.getElementById("rewards");
-const rewardsUsdEl=document.getElementById("rewardsUsd");
-const rewardsDailyEl=document.getElementById("rewardsDaily");
-const rewardsWeeklyEl=document.getElementById("rewardsWeekly");
-const rewardsMonthlyEl=document.getElementById("rewardsMonthly");
-const rewardBarEl=document.getElementById("rewardBar");
-const rewardLineEl=document.getElementById("rewardLine");
+const stakeEl = document.getElementById("stake");
+const stakeUsdEl = document.getElementById("stakeUsd");
 
-const aprEl=document.getElementById("apr");
-const updatedEl=document.getElementById("updated");
+const rewardsEl = document.getElementById("rewards");
+const rewardsUsdEl = document.getElementById("rewardsUsd");
+const rewardBarEl = document.getElementById("rewardBar");
+const rewardPercentEl = document.getElementById("rewardPercent");
 
-let chart, chartData=[];
+const aprEl = document.getElementById("apr");
+const updatedEl = document.getElementById("updated");
 
-// --- Helper ---
-const fetchJSON=async url=>{
-  try{return await (await fetch(url)).json();}
-  catch(e){console.error("Fetch error",url,e); return {};}
-};
+// Helper fetch
+const fetchJSON = async url => { try{ const res = await fetch(url); return await res.json(); } catch(e){ console.error("Fetch error:", url,e); return {}; }};
 
-function splitDigits(el,newV){
-  const oldV=el.innerText.replace(/,/g,'').split('');
-  const newS=newV.toFixed(6).split('');
-  let html='';
-  for(let i=0;i<newS.length;i++){
-    let oldC=oldV[i]||'0';
-    let newC=newS[i];
-    if(oldC<newC) html+='<span class="up">'+newC+'</span>';
-    else if(oldC>newC) html+='<span class="down">'+newC+'</span>';
-    else html+=newC;
-  }
-  el.innerHTML=html;
-}
+// Input
+addressInput.value = address;
+addressInput.onchange = e => { address = e.target.value.trim(); localStorage.setItem("inj_address", address); loadData(); };
 
-// --- Input indirizzo ---
-addressInput.value=address;
-addressInput.onchange=e=>{
-  address=e.target.value.trim();
-  localStorage.setItem("inj_address",address);
-  loadData();
-};
-
-// --- Load dati Injective ---
+// Load data Injective
 async function loadData(){
   if(!address) return;
   try{
-    const balanceRes=await fetchJSON(`https://lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`);
-    const injBalance=balanceRes.balances?.find(b=>b.denom==="inj");
-    availableInj=injBalance?Number(injBalance.amount)/1e18:0;
+    const balanceRes = await fetchJSON(`https://lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`);
+    const injBalance = balanceRes.balances?.find(b => b.denom==="inj");
+    availableInj = injBalance ? Number(injBalance.amount)/1e18 : 0;
 
-    const stakeRes=await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/delegations/${address}`);
-    stakeInj=stakeRes.delegation_responses?.reduce((sum,d)=>sum+Number(d.balance.amount||0),0)/1e18||0;
+    const stakeRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/delegations/${address}`);
+    stakeInj = stakeRes.delegation_responses?.reduce((sum,d)=>sum+Number(d.balance.amount||0),0)/1e18||0;
 
-    const rewardsRes=await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
-    rewardsInj=rewardsRes.rewards?.reduce((sum,r)=>sum+Number(r.reward[0]?.amount||0),0)/1e18||0;
+    const rewardsRes = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
+    rewardsInj = rewardsRes.rewards?.reduce((sum,r)=>sum+Number(r.reward[0]?.amount||0),0)/1e18||0;
 
-    const inflationRes=await fetchJSON(`https://lcd.injective.network/cosmos/mint/v1beta1/inflation`);
-    const poolRes=await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
-    const bonded=Number(poolRes.pool?.bonded_tokens||0);
-    const notBonded=Number(poolRes.pool?.not_bonded_tokens||0);
-    apr=(inflationRes.inflation*(bonded+notBonded)/bonded)*100;
-  }catch(e){console.error("Errore caricamento dati Injective",e);}
+    const inflationRes = await fetchJSON(`https://lcd.injective.network/cosmos/mint/v1beta1/inflation`);
+    const poolRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
+    const bonded = Number(poolRes.pool?.bonded_tokens||0);
+    const notBonded = Number(poolRes.pool?.not_bonded_tokens||0);
+    apr = (inflationRes.inflation*(bonded+notBonded)/bonded)*100;
+  } catch(e){ console.error("Errore dati Injective:",e);}
 }
 loadData();
 setInterval(loadData,60000);
 
-// --- Price History e WS ---
+// Price history
 async function fetchHistory(){
   try{
-    const res=await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96");
-    const d=await res.json();
-    chartData=d.map(c=>+c[4]);
-    price24hOpen=+d[0][1];
-    price24hLow=Math.min(...chartData);
-    price24hHigh=Math.max(...chartData);
-    targetPrice=chartData.at(-1);
+    const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96");
+    const d = await res.json();
+    chartData = d.map(c=>+c[4]);
+    price24hOpen = +d[0][1];
+    price24hLow = Math.min(...chartData);
+    price24hHigh = Math.max(...chartData);
+    targetPrice = chartData.at(-1);
     drawChart();
-  }catch(e){console.error("Errore price history:",e);}
+  } catch(e){ console.error("Errore price history:", e);}
 }
 fetchHistory();
 
+// Draw chart
 function drawChart(){
-  const ctx=document.getElementById("priceChart");
+  const ctx = document.getElementById("priceChart");
   if(chart) chart.destroy();
-  chart=new Chart(ctx,{
+  chart = new Chart(ctx,{
     type:"line",
     data:{labels:chartData.map((_,i)=>i),datasets:[{data:chartData,borderColor:"#22c55e",tension:0.3,fill:true}]},
     options:{plugins:{legend:{display:false}},scales:{x:{display:false}}}
   });
 }
 
+// Binance WS
 function startWS(){
-  const ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage=e=>{
-    const p=+JSON.parse(e.data).p;
-    targetPrice=p;
-    if(p>price24hHigh) price24hHigh=p;
-    if(p<price24hLow) price24hLow=p;
-  };
-  ws.onclose=()=>setTimeout(startWS,3000);
+  const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
+  ws.onmessage = e => { const p=+JSON.parse(e.data).p; targetPrice=p; if(p>price24hHigh) price24hHigh=p; if(p<price24hLow) price24hLow=p; };
+  ws.onclose = ()=>setTimeout(startWS,3000);
 }
 startWS();
 
-// --- Animate ---
+// Update numbers and bars
 function animate(){
+  const lerp = (a,b,f)=>a+(b-a)*f;
+
   // Price
-  displayedPrice+= (targetPrice-displayedPrice)*0.1;
-  splitDigits(priceEl,displayedPrice);
-  const delta=(displayedPrice-price24hOpen)/price24hOpen*100;
-  price24hEl.innerText=(delta>0?"▲ ":"▼ ")+Math.abs(delta).toFixed(2)+"%";
-  price24hEl.className="sub "+(delta>0?"up":delta<0?"down":"");
+  displayedPrice = lerp(displayedPrice,targetPrice,0.1);
+  priceEl.innerText = displayedPrice.toFixed(4);
 
-  // Barra price
-  const range=price24hHigh-price24hLow||1;
-  const leftPercent=(displayedPrice-price24hOpen)/range*50+50;
-  priceBarEl.style.left="50%";
-  priceBarEl.style.width=Math.abs(leftPercent-50)+"%";
-  priceBarEl.style.background=displayedPrice>=price24hOpen?"#22c55e":"#ef4444";
-  priceLineEl.style.left=leftPercent+"%";
+  const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
+  price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
+  price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
 
-  // Min/Max/Open
-  splitDigits(priceMinEl,price24hLow);
-  splitDigits(priceMaxEl,price24hHigh);
-  splitDigits(priceOpenEl,price24hOpen);
+  // Barra prezzo dal centro con linea gialla
+  const center=50;
+  const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
+  let linePos;
+  if(displayedPrice>=price24hOpen){
+    linePos=center+percent;
+    priceBarEl.style.left=`${center}%`;
+    priceBarEl.style.width=`${linePos-center}%`;
+    priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
+  } else{
+    linePos=center-percent;
+    priceBarEl.style.left=`${linePos}%`;
+    priceBarEl.style.width=`${center-linePos}%`;
+    priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
+  }
+  priceLineEl.style.left=`${linePos}%`;
+
+  // Min/Open/Max
+  priceMinEl.innerText=price24hLow.toFixed(4);
+  priceMaxEl.innerText=price24hHigh.toFixed(4);
+  priceOpenEl.innerText=price24hOpen.toFixed(4);
 
   // Available
-  displayedAvailable+=(availableInj-displayedAvailable)*0.1;
-  splitDigits(availableEl,displayedAvailable);
-  availableUsdEl.innerText="≈ $"+(displayedAvailable*displayedPrice).toFixed(2);
+  displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
+  availableEl.innerText=displayedAvailable.toFixed(6);
+  availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
   // Stake
-  displayedStake+=(stakeInj-displayedStake)*0.1;
-  splitDigits(stakeEl,displayedStake);
-  stakeUsdEl.innerText="≈ $"+(displayedStake*displayedPrice).toFixed(2);
+  displayedStake=lerp(displayedStake,stakeInj,0.1);
+  stakeEl.innerText=displayedStake.toFixed(4);
+  stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
   // Rewards
-  displayedRewards+=(rewardsInj-displayedRewards)*0.05;
-  splitDigits(rewardsEl,displayedRewards);
-  rewardsUsdEl.innerText="≈ $"+(displayedRewards*displayedPrice).toFixed(2);
+  displayedRewards=lerp(displayedRewards,rewardsInj,0.05);
+  rewardsEl.innerText=displayedRewards.toFixed(6);
+  rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
 
-  // Stime rewards
-  const secondsInDay=86400;
-  const rewardsPerSecond=displayedRewards/secondsInDay;
-  rewardsDailyEl.innerText="+ "+(rewardsPerSecond*secondsInDay).toFixed(6)+"/day";
-  rewardsWeeklyEl.innerText="+ "+(rewardsPerSecond*secondsInDay*7).toFixed(6)+"/week";
-  rewardsMonthlyEl.innerText="+ "+(rewardsPerSecond*secondsInDay*30).toFixed(6)+"/month";
-  stakeDailyEl.innerText="+ "+(rewardsPerSecond*secondsInDay).toFixed(6)+"/day";
-
-  // Barre gradient
-  rewardBarEl.style.width=Math.min(displayedRewards/rewardMax*100,100)+"%";
-  rewardBarEl.style.background="linear-gradient(to right,#0ea5e9,#3b82f6)";
-  rewardLineEl.style.left=Math.min(displayedRewards/rewardMax*100,100)+"%";
-
-  stakeBarEl.style.width=Math.min(displayedRewards/rewardMax*100,100)+"%";
-  stakeBarEl.style.background="linear-gradient(to right,#22c55e,#3b82f6)";
-  stakeLineEl.style.left=Math.min(displayedRewards/rewardMax*100,100)+"%";
+  // Barra reward
+  const rewardPercent = Math.min(displayedRewards/0.05*100,100);
+  rewardBarEl.style.width=rewardPercent+"%";
 
   // APR
   aprEl.innerText=apr.toFixed(2)+"%";
