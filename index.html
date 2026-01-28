@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Injective Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Injective Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script src="app.js" defer></script>
 </head>
 <body>
 
 <div class="container">
 
-  <div class="header">
-    <h1>Injective Dashboard</h1>
-  </div>
+  <div class="header"><h1>Injective Dashboard</h1></div>
 
   <input type="text" id="addressInput" placeholder="Inserisci indirizzo INJ">
 
@@ -44,6 +43,7 @@
       <div class="label">Staked</div>
       <div class="value-row"><span id="stake">0.0000</span></div>
       <div class="sub-row"><span id="stakeUsd" class="sub">≈ $0.00</span></div>
+      <div class="stake-estimate">Daily rewards reinvested: <span id="stakeDaily">0.0000</span></div>
     </div>
 
     <div class="card reward-card">
@@ -53,6 +53,11 @@
       <div class="reward-bar-container">
         <div id="rewardBar" class="reward-bar"></div>
         <span id="rewardPercent" class="reward-percent">0%</span>
+      </div>
+      <div class="reward-estimates">
+        <span>Day: <span id="rewardDay">0.0000</span></span>
+        <span>Week: <span id="rewardWeek">0.0000</span></span>
+        <span>Month: <span id="rewardMonth">0.0000</span></span>
       </div>
     </div>
 
@@ -72,6 +77,5 @@
 
 </div>
 
-<script src="app.js" defer></script>
 </body>
 </html>
