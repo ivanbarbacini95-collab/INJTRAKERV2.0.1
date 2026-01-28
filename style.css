@@ -184,7 +184,7 @@ body {
 
 .status.online .dot {
   background: #22c55e;
-  animation: blink 1s infinite;
+  animation: blink 1,5s infinite;
 }
 
 .status.offline .dot {
@@ -199,4 +199,5 @@ body {
   0%, 50%, 100% { opacity: 1; }
   25%, 75% { opacity: 0.3; }
 }
+
 
