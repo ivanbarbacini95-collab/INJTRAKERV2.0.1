@@ -19,11 +19,6 @@
     <div class="subtitle">Realtime staking & rewards dashboard</div>
   </div>
 
-  <div id="statusIndicator" class="status online">
-  <span class="dot"></span>
-  <span class="text">Online</span>
-</div>
-
   <!-- INPUT INDIRIZZO -->
   <input id="addressInput" placeholder="Inserisci indirizzo Injective (inj...)" />
 
@@ -37,7 +32,10 @@
       <div class="sub-row"><span id="price24h" class="sub">±0.00%</span></div>
 
       <div class="price-bar-container">
-        <div id="priceBar" class="price-bar"></div>
+        <!-- Barre separate -->
+        <div id="priceBarGreen" class="price-bar-green"></div>
+        <div id="priceBarRed" class="price-bar-red"></div>
+        <!-- Linea gialla -->
         <div id="priceLine" class="price-line"></div>
       </div>
 
@@ -48,21 +46,21 @@
       </div>
     </div>
 
-    <!-- AVAILABLE CARD -->
+    <!-- AVAILABLE -->
     <div class="card">
       <div class="label">Available</div>
       <div class="value-row"><span id="available">0.000000</span></div>
       <div class="sub-row"><span id="availableUsd">≈ $0.00</span></div>
     </div>
 
-    <!-- STAKED CARD -->
+    <!-- STAKED -->
     <div class="card">
       <div class="label">Staked</div>
       <div class="value-row"><span id="stake">0.0000</span></div>
       <div class="sub-row"><span id="stakeUsd">≈ $0.00</span></div>
     </div>
 
-    <!-- REWARDS CARD -->
+    <!-- REWARDS -->
     <div class="card">
       <div class="label">Rewards</div>
       <div class="value-row"><span id="rewards">0.0000000</span></div>
@@ -74,13 +72,13 @@
       </div>
     </div>
 
-    <!-- APR CARD -->
+    <!-- APR -->
     <div class="card">
       <div class="label">APR</div>
       <div class="value-row"><span id="apr">0%</span></div>
     </div>
 
-    <!-- CHART CARD -->
+    <!-- CHART 24H -->
     <div class="card chart-card">
       <div class="label">24h Price Chart</div>
       <canvas id="priceChart"></canvas>
@@ -95,4 +93,3 @@
 
 </body>
 </html>
-
