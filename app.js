@@ -49,13 +49,34 @@ async function loadAccount(){
   stakeInj = (s.delegation_responses||[])
     .reduce((a,d)=>a+Number(d.balance.amount),0)/1e18;
 
-  rewardsInj = (r.rewards||[])
-    .reduce((a,v)=>a+v.reward.reduce((s,x)=>s+Number(x.amount),0),0)/1e18;
+  const newRewards = (r.rewards||[]).reduce((a,v)=>a+v.reward.reduce((s,x)=>s+Number(x.amount),0),0)/1e18;
+
+  // Evidenzia in verde se crescono
+  if(newRewards > rewardsInj){
+    rewardsInj = newRewards;
+    $("rewards").classList.add("up");
+    setTimeout(()=> $("rewards").classList.remove("up"), 1000);
+  }
 
   apr = Number(i.inflation||0)*100;
 }
+
+// Aggiornamento account completo ogni 60s
 loadAccount();
-setInterval(loadAccount,60000);
+setInterval(loadAccount, 60000);
+
+// Aggiornamento solo rewards ogni 2 secondi
+setInterval(async ()=>{
+  if(!address) return;
+  const r = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
+  const newRewards = (r.rewards||[]).reduce((a,v)=>a+v.reward.reduce((s,x)=>s+Number(x.amount),0),0)/1e18;
+
+  if(newRewards > rewardsInj){
+    rewardsInj = newRewards;
+    $("rewards").classList.add("up");
+    setTimeout(()=> $("rewards").classList.remove("up"), 1000);
+  }
+}, 2000);
 
 /* HISTORY */
 async function fetchHistory(){
@@ -163,6 +184,18 @@ function updatePriceBar() {
   $("priceBar").style.left = barLeft + "%";
   $("priceBar").style.width = barWidth + "%";
 }
+
+/* PRELEVO REWARDS */
+if(!$("claimRewards")){
+  const btn = document.createElement("button");
+  btn.id = "claimRewards";
+  btn.textContent = "Preleva Rewards";
+  document.querySelector(".cards-wrapper").appendChild(btn);
+}
+$("claimRewards").onclick = ()=>{
+  rewardsInj = 0;
+  displayedRewards = 0;
+};
 
 /* ANIMATION LOOP */
 function animate(){
