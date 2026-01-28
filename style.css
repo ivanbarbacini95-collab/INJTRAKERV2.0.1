@@ -27,10 +27,7 @@ body {
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
 
-.tf-selector {
-  position: relative;
-}
-
+.tf-selector { position: relative; }
 .tf-icon {
   cursor: pointer;
   padding: 0.3rem 0.6rem;
@@ -38,7 +35,6 @@ body {
   border-radius: 0.3rem;
   user-select: none;
 }
-
 .tf-menu {
   position: absolute;
   top: 100%;
@@ -50,13 +46,11 @@ body {
   overflow: hidden;
   z-index: 10;
 }
-
 .tf-menu div {
   padding: 0.3rem 0.6rem;
   cursor: pointer;
   color: #f9fafb;
 }
-
 .tf-menu div.active, .tf-menu div:hover { background: #3b82f6; }
 
 #addressInput {
@@ -68,10 +62,7 @@ body {
   font-size: 1rem;
 }
 
-#addressInput:focus {
-  outline: none;
-  border-color: #3b82f6;
-}
+#addressInput:focus { outline: none; border-color: #3b82f6; }
 
 .cards-wrapper {
   display: flex;
@@ -90,9 +81,7 @@ body {
 }
 
 .card .label { font-weight: bold; font-size: 1.2rem; }
-
 .value-row { display: flex; justify-content: flex-end; font-size: 1.4rem; font-weight: bold; }
-
 .sub-row { display: flex; justify-content: flex-end; font-size: 0.9rem; color: #9ca3af; }
 
 .price-bar-container {
@@ -166,12 +155,13 @@ body {
 
 .chart-card {
   min-height: 250px;
+  height: 300px;
   position: relative;
 }
 
 #priceChart {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 @media (max-width: 768px) { .cards-wrapper { flex-direction: column; } }
