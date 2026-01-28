@@ -1,3 +1,4 @@
+/* --- BODY / CONTAINER --- */
 body {
   font-family: Inter, sans-serif;
   background: #000;
@@ -23,16 +24,26 @@ body {
 .header h1 {
   font-size: 1.8rem;
   font-weight: 800;
+  color: #f9fafb;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
 
+/* --- ADDRESS INPUT --- */
 #addressInput {
-  padding: .8rem;
-  border-radius: .5rem;
-  border: 2px solid #374151;
+  padding: 0.8rem;
+  border-radius: 0.5rem;
+  border: 2px solid #4b5563;
   background: #0a0f1f;
-  color: #fff;
+  color: #f9fafb;
+  font-size: 1rem;
 }
 
+#addressInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* --- CARDS WRAPPER --- */
 .cards-wrapper {
   display: flex;
   flex-direction: column;
@@ -40,15 +51,18 @@ body {
 }
 
 .card {
-  background: linear-gradient(135deg,#111827,#1e293b);
-  border-radius: .5rem;
+  background: linear-gradient(135deg, #111827, #1e293b);
+  border-radius: 0.5rem;
   padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
-.label {
+.card .label {
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .value-row {
@@ -61,127 +75,154 @@ body {
 .sub-row {
   display: flex;
   justify-content: flex-end;
-  font-size: .9rem;
+  font-size: 0.9rem;
   color: #9ca3af;
 }
+
+/* --- PRICE BAR --- */
+.price-card { padding-bottom: 1.4rem; }
 
 .price-bar-container {
   position: relative;
   height: 24px;
   background: #111827;
-  border-radius: .3rem;
+  border-radius: 0.3rem;
+  margin-top: 0.5rem;
   overflow: hidden;
-  margin-top: .5rem;
 }
 
 .price-bar {
   position: absolute;
+  top: 0;
+  left: 50%;
   height: 100%;
-  transition: width .2s, left .2s;
+  width: 0%;
+  transform-origin: center left;
+  transition: width 0.2s linear, left 0.2s linear;
 }
 
 .price-line {
   position: absolute;
-  width: 2px;
+  top: 0;
   height: 100%;
+  width: 2px;
   background: #facc15;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: left 0.2s linear;
 }
 
+/* --- MIN / OPEN / MAX --- */
 .price-values {
   position: relative;
-  margin-top: 8px;
-  height: 20px;
-  font-size: 0.85rem;
+  margin-top: 10px;
+  height: 22px;
+  font-size: .85rem;
   color: #9ca3af;
-  font-weight: 500;
 }
 
 .price-extremes {
   font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 
-.price-extremes.left {
+.price-extremes.min {
   position: absolute;
   left: 0;
+  color: #ef4444;
 }
 
-.price-extremes.center {
+.price-extremes.open {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.price-extremes.right {
+.price-extremes.max {
   position: absolute;
   right: 0;
+  color: #22c55e;
 }
 
+/* --- OPEN TICK --- */
+.open-tick {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 2px;
+  height: 6px;
+  background: #9ca3af;
+  transform: translateX(-50%);
+}
+
+/* --- REWARD BAR --- */
 .reward-bar-container {
-  position: relative;
-  height: 24px;
   background: #111827;
-  border-radius: .3rem;
-  margin-top: .5rem;
+  height: 24px;
+  border-radius: 0.3rem;
+  position: relative;
+  margin-top: 0.5rem;
+  overflow: hidden;
 }
 
 .reward-bar {
+  background: linear-gradient(to right, #0ea5e9, #3b82f6);
   height: 100%;
-  background: linear-gradient(to right,#0ea5e9,#3b82f6);
+  width: 0%;
+  border-radius: 0.3rem;
+  transition: width 0.3s linear;
 }
 
 .reward-percent {
   position: absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  font-size:.85rem;
-  font-weight:bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.85rem;
+  color: #f9fafb;
+  font-weight: bold;
 }
 
-.up { color:#22c55e; }
-.down { color:#ef4444; }
-
+/* --- LAST UPDATE --- */
 .last-update {
-  text-align:center;
-  font-size:.8rem;
-  color:#9ca3af;
-}
-
-/* --- Timeframe menu --- */
-.tf-wrapper {
-  position: relative;
-}
-
-.tf-icon {
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: .3rem;
-}
-
-.tf-menu {
-  position: absolute;
-  top: 140%;
-  right: 0;
-  background: #111827;
-  border: 1px solid #374151;
-  border-radius: .4rem;
-  display: none;
-  flex-direction: column;
-  min-width: 80px;
-  z-index: 10;
-}
-
-.tf-menu div {
-  padding: .4rem .6rem;
-  cursor: pointer;
-  font-size: .85rem;
+  font-size: 0.8rem;
   text-align: center;
+  margin-top: 0.5rem;
   color: #9ca3af;
 }
 
-.tf-menu div:hover,
-.tf-menu div.active {
-  background: #22c55e;
-  color: #000;
+/* --- UP / DOWN COLORS --- */
+.up { color: #22c55e; transition: color 0.3s; }
+.down { color: #ef4444; transition: color 0.3s; }
+
+/* --- CHART CARD --- */
+.chart-card canvas {
+  width: 100%;
+  height: 200px;
 }
 
+/* --- TIMEFRAME ICON --- */
+.tf-wrapper { position: relative; display: flex; align-items: center; gap: 0.5rem; }
+.tf-icon { cursor: pointer; user-select: none; font-size: 1.2rem; }
+.tf-menu {
+  display: none;
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #1e293b;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  flex-direction: column;
+}
+.tf-menu div {
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.tf-menu div:hover, .tf-menu div.active { background: #3b82f6; color: #fff; }
+
+/* --- MEDIA QUERIES --- */
+@media (max-width: 768px) {
+  .cards-wrapper { flex-direction: column; }
+}
