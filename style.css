@@ -14,18 +14,11 @@ body {
   gap: 1rem;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
 .header h1 {
   font-size: 1.8rem;
   font-weight: 800;
   color: #f9fafb;
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
-  margin: 0;
 }
 
 #addressInput {
@@ -58,26 +51,12 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
-.card .label {
-  font-weight: bold;
-  font-size: 1.2rem;
-}
+.card .label { font-weight: bold; font-size: 1.2rem; }
 
-.value-row {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 1.4rem;
-  font-weight: bold;
-}
+.value-row { display: flex; justify-content: flex-end; font-size: 1.4rem; font-weight: bold; }
 
-.sub-row {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 0.9rem;
-  color: #9ca3af;
-}
+.sub-row { display: flex; justify-content: flex-end; font-size: 0.9rem; color: #9ca3af; }
 
-/* Barra prezzo */
 .price-bar-container {
   position: relative;
   height: 24px;
@@ -93,17 +72,9 @@ body {
   left: 50%;
   height: 100%;
   width: 0%;
-  background: linear-gradient(to right, #22c55e, #10b981); /* gradiente verde */
+  background: linear-gradient(to right, #22c55e, #10b981);
   transform-origin: center left;
-  transition: width 0.2s linear, left 0.2s linear, background 0.2s;
-}
-
-.reward-bar {
-  background: linear-gradient(to right, #0ea5e9, #3b82f6); /* gradiente blu */
-  height: 100%;
-  width: 0%;
-  border-radius: 0.3rem;
-  transition: width 0.3s linear;
+  transition: width 0.2s linear, left 0.2s linear;
 }
 
 .price-line {
@@ -117,34 +88,12 @@ body {
   transition: left 0.2s linear;
 }
 
-
-.price-values {
-  position: relative;
-  margin-top: 6px;
-  font-size: 0.8rem;
-  height: 20px;
-}
-
-.price-extremes {
-  color: #f9fafb;
-  font-weight: bold;
-}
-
+.price-values { position: relative; margin-top: 6px; font-size: 0.8rem; height: 20px; }
+.price-extremes { color: #f9fafb; font-weight: bold; }
 .price-extremes.left { position: absolute; left: 0; }
 .price-extremes.center { position: absolute; left: 50%; transform: translateX(-50%); }
 .price-extremes.right { position: absolute; right: 0; }
 
-/* Scintille ATH/ATL */
-.price-bar.ath, .price-bar.atl {
-  animation: flash 0.6s alternate infinite;
-}
-
-@keyframes flash {
-  from { opacity: 1; }
-  to { opacity: 0.3; }
-}
-
-/* Reward bar */
 .reward-bar-container {
   background: #111827;
   height: 24px;
@@ -155,7 +104,7 @@ body {
 }
 
 .reward-bar {
-  background: #0ea5e9;
+  background: linear-gradient(to right, #0ea5e9, #3b82f6);
   height: 100%;
   width: 0%;
   border-radius: 0.3rem;
@@ -172,17 +121,9 @@ body {
   font-weight: bold;
 }
 
-.last-update {
-  font-size: 0.8rem;
-  text-align: center;
-  margin-top: 0.5rem;
-  color: #9ca3af;
-}
+.last-update { font-size: 0.8rem; text-align: center; margin-top: 0.5rem; color: #9ca3af; }
 
 .up { color: #22c55e; transition: color 0.3s; }
 .down { color: #ef4444; transition: color 0.3s; }
 
-@media (max-width: 768px) {
-  .cards-wrapper { flex-direction: column; }
-}
-
+@media (max-width: 768px) { .cards-wrapper { flex-direction: column; } }
