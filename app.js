@@ -180,18 +180,6 @@ function updatePriceBar() {
   $("priceBar").style.width = barWidth + "%";
 }
 
-/* PRELEVO REWARDS */
-if(!$("claimRewards")){
-  const btn = document.createElement("button");
-  btn.id = "claimRewards";
-  btn.textContent = "Preleva Rewards";
-  document.querySelector(".cards-wrapper").appendChild(btn);
-}
-$("claimRewards").onclick = ()=>{
-  rewardsInj = 0;
-  displayedRewards = 0;
-};
-
 /* ANIMATION LOOP */
 function animate(){
   // PRICE
