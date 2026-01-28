@@ -1,5 +1,5 @@
 // -----------------------------
-// Injective Dashboard Realtime Slot-Machine
+// Injective Dashboard Realtime Slot-Machine + Chart
 // -----------------------------
 
 let address = localStorage.getItem("inj_address") || "";
@@ -82,18 +82,33 @@ async function loadData() {
     } catch(e){ console.error("Errore dati Injective:", e);}
 }
 loadData();
-setInterval(loadData, 60000); // aggiorna blockchain ogni minuto
+setInterval(loadData, 60000);
 
 // -----------------------------
-// Init 24h price (apertura, min, max)
+// Init 24h price (apertura, min, max) + Chart Data
 // -----------------------------
 async function initPrice24h() {
     try {
-        const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=1m&limit=1440");
+        const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96");
         const data = await res.json();
+        chartData = data.map(c => parseFloat(c[4]));
         price24hOpen = parseFloat(data[0][1]);
-        price24hLow = Math.min(...data.map(c => parseFloat(c[3])));
-        price24hHigh = Math.max(...data.map(c => parseFloat(c[2])));
+        price24hLow = Math.min(...chartData.map(c => parseFloat(c[3])));
+        price24hHigh = Math.max(...chartData.map(c => parseFloat(c[2])));
+        targetPrice = chartData.at(-1);
+
+        // Inizializzazione valori reali per evitare barra che parte da sinistra
+        displayedPrice = targetPrice;
+        displayedAvailable = availableInj;
+        displayedStake = stakeInj;
+        displayedRewards = rewardsInj;
+
+        // Draw chart
+        drawChart();
+
+        // Aggiorna barra subito
+        updatePriceBarImmediate();
+
     } catch(e){ console.error("Errore initPrice24h:", e); }
 }
 initPrice24h();
@@ -120,10 +135,70 @@ function startWS(){
 
         if(p < price24hLow) price24hLow = p;
         if(p > price24hHigh) price24hHigh = p;
+
+        // Aggiorna grafico
+        chartData.push(p);
+        if(chartData.length>96) chartData.shift();
+        if(chart) chart.data.datasets[0].data = chartData;
+        if(chart) chart.update();
     };
     ws.onclose = () => setTimeout(startWS, 3000);
 }
 startWS();
+
+// -----------------------------
+// Draw Chart 24h
+// -----------------------------
+function drawChart(){
+    const ctx = document.getElementById("priceChart");
+    if(chart) chart.destroy();
+    chart = new Chart(ctx,{
+        type:"line",
+        data:{
+            labels: chartData.map((_,i)=>i),
+            datasets:[{
+                data: chartData,
+                borderColor:"#22c55e",
+                backgroundColor:"rgba(34,197,94,0.2)",
+                tension:0.3,
+                fill:true,
+                pointRadius:0
+            }]
+        },
+        options:{
+            plugins:{legend:{display:false}},
+            scales:{
+                x:{display:false},
+                y:{ticks:{color:"#f9fafb"}}
+            }
+        }
+    });
+}
+
+// -----------------------------
+// Aggiornamento barra al caricamento (senza animazione)
+// -----------------------------
+function updatePriceBarImmediate(){
+    const center = 50;
+    let linePos = center;
+    if(displayedPrice >= price24hOpen){
+        let percent = Math.min((displayedPrice - price24hOpen)/(price24hHigh - price24hOpen)*50,50);
+        linePos = center + percent;
+        priceBarEl.style.left = `${center}%`;
+        priceBarEl.style.width = `${linePos - center}%`;
+        priceBarEl.style.background = "linear-gradient(to right,#22c55e,#10b981)";
+    } else {
+        let percent = Math.min((price24hOpen - displayedPrice)/(price24hOpen - price24hLow)*50,50);
+        linePos = center - percent;
+        priceBarEl.style.left = `${linePos}%`;
+        priceBarEl.style.width = `${center - linePos}%`;
+        priceBarEl.style.background = "linear-gradient(to right,#ef4444,#f87171)";
+    }
+    priceLineEl.style.left = `${linePos}%`;
+    priceMinEl.innerText = price24hLow.toFixed(4);
+    priceMaxEl.innerText = price24hHigh.toFixed(4);
+    priceOpenEl.innerText = price24hOpen.toFixed(4);
+}
 
 // -----------------------------
 // Animate cifra-slot machine
