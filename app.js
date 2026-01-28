@@ -35,20 +35,37 @@ function updateDigits(el, oldVal, newVal, fixed = 4){
   const oldStr = oldVal.toFixed(fixed);
   const newStr = newVal.toFixed(fixed);
   const oldArr = oldStr.split(""), newArr = newStr.split("");
+
+  // Se la struttura cambia, ricrea tutto
   if (!el.innerHTML || el.children.length !== newArr.length) {
-    el.innerHTML = newArr.map(c=>`<span class="digit-wrapper"><span class="digit-inner">${c}</span></span>`).join("");
+    el.innerHTML = newArr.map(c => `<span class="digit-wrapper"><span class="digit-inner">${c}</span></span>`).join("");
     return;
   }
-  for (let i=0;i<newArr.length;i++){
+
+  for (let i = 0; i < newArr.length; i++) {
     const digitEl = el.children[i].querySelector(".digit-inner");
-    if(!digitEl) continue;
-    if(oldArr[i]!==newArr[i]){
+    if (!digitEl) continue;
+
+    if (oldArr[i] !== newArr[i]) {
       digitEl.innerText = newArr[i];
-      digitEl.classList.add(newVal>oldVal?"up":"down");
+
+      // Se la cifra numerica aumenta o diminuisce
+      const oldNum = parseInt(oldArr[i], 10);
+      const newNum = parseInt(newArr[i], 10);
+
+      if (!isNaN(oldNum) && !isNaN(newNum)) {
+        if (newNum > oldNum) digitEl.classList.add("up");
+        else if (newNum < oldNum) digitEl.classList.add("down");
+      } else {
+        // caratteri come "." o "-" restano neutri
+        digitEl.classList.remove("up","down");
+      }
+
       setTimeout(()=>digitEl.classList.remove("up","down"),500);
     }
   }
 }
+
 
 // ---------- INPUT ----------
 addressInput.value = address;
