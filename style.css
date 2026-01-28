@@ -1,4 +1,3 @@
-/* ---------------------- BODY E CONTAINER ---------------------- */
 body {
   font-family: Inter, sans-serif;
   background: #000;
@@ -15,7 +14,6 @@ body {
   gap: 1rem;
 }
 
-/* ---------------------- HEADER ---------------------- */
 .header {
   display: flex;
   align-items: center;
@@ -30,7 +28,6 @@ body {
   margin: 0;
 }
 
-/* ---------------------- INPUT ---------------------- */
 #addressInput {
   padding: 0.8rem;
   border-radius: 0.5rem;
@@ -45,7 +42,6 @@ body {
   border-color: #3b82f6;
 }
 
-/* ---------------------- CARDS ---------------------- */
 .cards-wrapper {
   display: flex;
   flex-direction: column;
@@ -72,7 +68,7 @@ body {
   justify-content: flex-end;
   font-size: 1.4rem;
   font-weight: bold;
-  font-variant-numeric: tabular-nums; /* Monospazio cifre */
+  font-variant-numeric: tabular-nums;
 }
 
 .sub-row {
@@ -83,7 +79,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------- SCORRIMENTO CIFRE ---------------------- */
 .digit-wrapper {
   display: inline-block;
   overflow: hidden;
@@ -97,15 +92,9 @@ body {
   transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.up .digit-inner {
-  color: #22c55e;
-}
+.up .digit-inner { color: #22c55e; }
+.down .digit-inner { color: #ef4444; }
 
-.down .digit-inner {
-  color: #ef4444;
-}
-
-/* ---------------------- REWARD BAR ---------------------- */
 .reward-bar-container {
   background: #111827;
   height: 24px;
@@ -133,7 +122,6 @@ body {
   font-weight: bold;
 }
 
-/* ---------------------- PRICE BAR ---------------------- */
 .price-bar-container {
   position: relative;
   height: 24px;
@@ -148,7 +136,7 @@ body {
   top: 0;
   height: 100%;
   width: 0%;
-  background: #22c55e; /* verde/rosso dinamico */
+  background: #22c55e;
   transition: width 0.2s linear, left 0.2s linear, background 0.2s;
 }
 
@@ -157,11 +145,10 @@ body {
   top: 0;
   height: 100%;
   width: 2px;
-  background: #facc15; /* linea gialla che segue il prezzo */
+  background: #facc15;
   transition: left 0.2s linear;
 }
 
-/* Valori sotto la barra */
 .price-values {
   position: relative;
   margin-top: 6px;
@@ -186,7 +173,6 @@ body {
   to { opacity: 0.3; }
 }
 
-/* ---------------------- LAST UPDATE ---------------------- */
 .last-update {
   font-size: 0.8rem;
   text-align: center;
@@ -194,10 +180,8 @@ body {
   color: #9ca3af;
 }
 
-.up { transition: color 0.3s; }
-.down { transition: color 0.3s; }
+.up, .down { transition: color 0.3s; }
 
-/* ---------------------- RESPONSIVE ---------------------- */
 @media (max-width: 768px) {
   .cards-wrapper { flex-direction: column; }
 }
