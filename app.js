@@ -135,27 +135,33 @@ function animate(){
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
-  // BARRA DEL PREZZO CENTRATA
-  if(price24hHigh > price24hLow){
-    const delta = displayedPrice - price24hOpen; // differenza dal prezzo di apertura
-    const maxDelta = Math.max(price24hHigh - price24hOpen, price24hOpen - price24hLow);
-    const pct = Math.min(Math.abs(delta) / maxDelta, 1) * 50; // 50% max a destra o sinistra
+ // BARRA DEL PREZZO CENTRATA
+if(price24hHigh > price24hLow){
+  const delta = displayedPrice - price24hOpen; // differenza dal prezzo di apertura
+  const maxDelta = Math.max(price24hHigh - price24hOpen, price24hOpen - price24hLow);
+  const pct = Math.min(Math.abs(delta) / maxDelta, 1) * 50; // 50% max a destra o sinistra
 
-    // colore verde o rosso
-    $("priceBar").style.background = delta>=0 ? "#22c55e" : "#ef4444";
+  // colore verde o rosso
+  const color = delta>=0 ? "#22c55e" : "#ef4444";
+  $("priceBar").style.background = color;
 
-    if(delta >= 0){
-      $("priceBar").style.left = "50%";
-      $("priceBar").style.width = pct + "%";
-    } else {
-      $("priceBar").style.left = (50 - pct) + "%"; // cresce verso sinistra
-      $("priceBar").style.width = pct + "%";
-    }
-
-    // linea gialla sempre sul prezzo attuale
-    const linePct = ((displayedPrice - price24hLow) / (price24hHigh - price24hLow)) * 100;
-    $("priceLine").style.left = linePct + "%";
+  // la barra parte dal centro e arriva fino al prezzo attuale (linea gialla)
+  if(delta >= 0){
+    $("priceBar").style.left = "50%";
+    $("priceBar").style.width = pct + "%";
+  } else {
+    $("priceBar").style.left = (50 - pct) + "%";
+    $("priceBar").style.width = pct + "%";
   }
+
+  // linea gialla sempre sul prezzo attuale
+  const linePct = ((displayedPrice - price24hLow) / (price24hHigh - price24hLow)) * 100;
+  $("priceLine").style.left = linePct + "%";
+
+  // la barra “segue” la linea gialla
+  $("priceBar").style.width = Math.abs(linePct - 50) + "%";
+  $("priceBar").style.left = linePct >= 50 ? "50%" : linePct + "%";
+}
 
   // Account animato
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
