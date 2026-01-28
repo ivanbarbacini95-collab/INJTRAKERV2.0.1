@@ -136,7 +136,7 @@ async function fetchHistory() {
   const data = await res.json();
 
   chartData = data.map(c => +c[4]);
-  price24hOpen = +data[0][1]; // open approssimato
+  price24hOpen = +data[0][1];
   price24hLow = Math.min(...chartData);
   price24hHigh = Math.max(...chartData);
   targetPrice = chartData.at(-1);
@@ -167,13 +167,8 @@ function drawChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        x: { display: false },
-        y: { display: false }
-      }
+      plugins: { legend: { display: false } },
+      scales: { x: { display: false }, y: { display: false } }
     }
   });
 }
@@ -199,74 +194,40 @@ startWS();
 /* -------- animate -------- */
 function animate() {
   displayedPrice += (targetPrice - displayedPrice) * 0.1;
-  updateAnimatedNumber(
-    priceEl,
-    displayedPrice,
-    targetPrice,
-    PRICE_DECIMALS,
-    prevTargets.price
-  );
+  updateAnimatedNumber(priceEl, displayedPrice, targetPrice, PRICE_DECIMALS, prevTargets.price);
 
   const delta = ((displayedPrice - price24hOpen) / price24hOpen) * 100;
-  price24hEl.innerText =
-    (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
+  price24hEl.innerText = (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
   price24hEl.className = "sub " + (delta >= 0 ? "up" : "down");
 
   const range = price24hHigh - price24hLow || 1;
-  const offset =
-    ((displayedPrice - price24hOpen) / range) * 100 + 50;
+  const offset = ((displayedPrice - price24hOpen) / range) * 100 + 50;
   priceBarEl.style.left = offset >= 50 ? "50%" : offset + "%";
   priceBarEl.style.width = Math.abs(offset - 50) + "%";
-  priceBarEl.style.background =
-    displayedPrice >= price24hOpen ? "#22c55e" : "#ef4444";
+  priceBarEl.style.background = displayedPrice >= price24hOpen ? "#22c55e" : "#ef4444";
 
   priceMinEl.innerText = price24hLow.toFixed(PRICE_DECIMALS);
   priceOpenEl.innerText = price24hOpen.toFixed(PRICE_DECIMALS);
   priceMaxEl.innerText = price24hHigh.toFixed(PRICE_DECIMALS);
 
   displayedAvailable += (availableInj - displayedAvailable) * 0.1;
-  updateAnimatedNumber(
-    availableEl,
-    displayedAvailable,
-    availableInj,
-    INJ_DECIMALS,
-    prevTargets.available
-  );
-  availableUsdEl.innerText =
-    (displayedAvailable * displayedPrice).toFixed(2);
+  updateAnimatedNumber(availableEl, displayedAvailable, availableInj, INJ_DECIMALS, prevTargets.available);
+  availableUsdEl.innerText = (displayedAvailable * displayedPrice).toFixed(2);
 
   displayedStake += (stakeInj - displayedStake) * 0.1;
-  updateAnimatedNumber(
-    stakeEl,
-    displayedStake,
-    stakeInj,
-    PRICE_DECIMALS,
-    prevTargets.stake
-  );
-  stakeUsdEl.innerText =
-    (displayedStake * displayedPrice).toFixed(2);
+  updateAnimatedNumber(stakeEl, displayedStake, stakeInj, PRICE_DECIMALS, prevTargets.stake);
+  stakeUsdEl.innerText = (displayedStake * displayedPrice).toFixed(2);
 
   displayedRewards += (rewardsInj - displayedRewards) * 0.05;
-  updateAnimatedNumber(
-    rewardsEl,
-    displayedRewards,
-    rewardsInj,
-    INJ_DECIMALS,
-    prevTargets.rewards
-  );
-  rewardsUsdEl.innerText =
-    (displayedRewards * displayedPrice).toFixed(2);
+  updateAnimatedNumber(rewardsEl, displayedRewards, rewardsInj, INJ_DECIMALS, prevTargets.rewards);
+  rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
 
-  const rewardPct = Math.min(
-    (displayedRewards / REWARD_MAX) * 100,
-    100
-  );
+  const rewardPct = Math.min((displayedRewards / REWARD_MAX) * 100, 100);
   rewardBarEl.style.width = rewardPct + "%";
   rewardPercentEl.innerText = rewardPct.toFixed(1) + "%";
 
   aprEl.innerText = apr.toFixed(2) + "%";
-  updatedEl.innerText =
-    "Last Update: " + new Date().toLocaleTimeString();
+  updatedEl.innerText = "Last Update: " + new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
 }
