@@ -1,12 +1,12 @@
 // -----------------------------
-// Injective Dashboard JS (Realtime via Binance WS)
+// Injective Dashboard Realtime Slot-Machine
 // -----------------------------
 
 let address = localStorage.getItem("inj_address") || "";
 
 // Variabili display
-let displayedPrice = 0, targetPrice = 0, price24hOpen = 0;
-let price24hLow = 0, price24hHigh = 0;
+let displayedPrice = 0, targetPrice = 0;
+let price24hOpen = 0, price24hLow = Infinity, price24hHigh = -Infinity;
 let stakeInj = 0, displayedStake = 0;
 let rewardsInj = 0, displayedRewards = 0;
 let availableInj = 0, displayedAvailable = 0;
@@ -85,6 +85,28 @@ loadData();
 setInterval(loadData, 60000); // aggiorna blockchain ogni minuto
 
 // -----------------------------
+// Init 24h price (apertura, min, max)
+// -----------------------------
+async function initPrice24h() {
+    try {
+        const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=1m&limit=1440");
+        const data = await res.json();
+        price24hOpen = parseFloat(data[0][1]);
+        price24hLow = Math.min(...data.map(c => parseFloat(c[3])));
+        price24hHigh = Math.max(...data.map(c => parseFloat(c[2])));
+    } catch(e){ console.error("Errore initPrice24h:", e); }
+}
+initPrice24h();
+
+// Reset giornaliero min/max e apertura
+setInterval(() => {
+    const now = new Date();
+    if(now.getUTCHours() === 0 && now.getUTCMinutes() === 0){
+        initPrice24h();
+    }
+}, 60000);
+
+// -----------------------------
 // Price WebSocket Binance
 // -----------------------------
 function startWS(){
@@ -94,20 +116,19 @@ function startWS(){
         const p = parseFloat(data.p);
         targetPrice = p;
 
-        // Aggiorna min/max e open
         if(!price24hOpen) price24hOpen = p;
-        if(p < price24hLow || !price24hLow) price24hLow = p;
-        if(p > price24hHigh || !price24hHigh) price24hHigh = p;
+
+        if(p < price24hLow) price24hLow = p;
+        if(p > price24hHigh) price24hHigh = p;
     };
     ws.onclose = () => setTimeout(startWS, 3000);
 }
 startWS();
 
 // -----------------------------
-// Animate cifra-per-cifra
+// Animate cifra-slot machine
 // -----------------------------
 function animate(){
-    // --- Helper cifra per cifra ---
     function animateDigits(el, current, target, decimals=4, flashDuration=300){
         const curStr = current.toFixed(decimals);
         const tgtStr = target.toFixed(decimals);
@@ -115,7 +136,7 @@ function animate(){
         for(let i=0;i<tgtStr.length;i++){
             if(curStr[i] === tgtStr[i]) result += curStr[i];
             else {
-                result += tgtStr[i]; // salto diretto alla cifra aggiornata
+                result += tgtStr[i];
                 el.classList.add(target>current?"up":"down");
                 setTimeout(()=>el.classList.remove("up"), flashDuration);
                 setTimeout(()=>el.classList.remove("down"), flashDuration);
@@ -131,22 +152,23 @@ function animate(){
     price24hEl.innerText = (delta>=0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2) + "%";
     price24hEl.className = "sub "+(delta>0?"up":delta<0?"down":"");
 
-    // Barra price
+    // Barra price con apertura al centro
     const center=50;
-    const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
-    let linePos;
-    if(displayedPrice>=price24hOpen){
-        linePos=center+percent;
-        priceBarEl.style.left=`${center}%`;
-        priceBarEl.style.width=`${linePos-center}%`;
-        priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
-    }else{
-        linePos=center-percent;
-        priceBarEl.style.left=`${linePos}%`;
-        priceBarEl.style.width=`${center-linePos}%`;
-        priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
+    let percent=0, linePos=center;
+    if(displayedPrice >= price24hOpen){
+        percent = Math.min((displayedPrice - price24hOpen)/(price24hHigh - price24hOpen)*50,50);
+        linePos = center + percent;
+        priceBarEl.style.left = `${center}%`;
+        priceBarEl.style.width = `${linePos - center}%`;
+        priceBarEl.style.background = "linear-gradient(to right,#22c55e,#10b981)";
+    } else {
+        percent = Math.min((price24hOpen - displayedPrice)/(price24hOpen - price24hLow)*50,50);
+        linePos = center - percent;
+        priceBarEl.style.left = `${linePos}%`;
+        priceBarEl.style.width = `${center - linePos}%`;
+        priceBarEl.style.background = "linear-gradient(to right,#ef4444,#f87171)";
     }
-    priceLineEl.style.left=`${linePos}%`;
+    priceLineEl.style.left = `${linePos}%`;
     priceMinEl.innerText = price24hLow.toFixed(4);
     priceMaxEl.innerText = price24hHigh.toFixed(4);
     priceOpenEl.innerText = price24hOpen.toFixed(4);
