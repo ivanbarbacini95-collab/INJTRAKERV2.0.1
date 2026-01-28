@@ -234,15 +234,17 @@ function animate(){
   animateDigits(stakeEl, oldStake, displayedStake, 4);
   stakeUsdEl.innerText = (displayedStake*displayedPrice).toFixed(2);
 
-  // REWARDS
-  const oldRewards = displayedRewards;
-  displayedRewards = lerp(displayedRewards, rewardsInj, 0.05);
-  animateDigits(rewardsEl, oldRewards, displayedRewards, 7); // 7 decimali
-  rewardsUsdEl.innerText = (displayedRewards*displayedPrice).toFixed(2);
+  // --- REWARDS ---
+const oldRewards = displayedRewards;
+displayedRewards = lerp(displayedRewards, rewardsInj, 0.05);
+animateDigits(rewardsEl, oldRewards, displayedRewards, 7); // 7 decimali
 
-  const rewardPercent = Math.min(displayedRewards / 0.05 * 100, 100);
-  rewardBarEl.style.width = rewardPercent + "%";
-  rewardPercentEl.innerText = rewardPercent.toFixed(0) + "%";
+rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
+
+// Barra reward: max 0.05, con percentuale a 1 decimale
+const rewardPercent = Math.min(displayedRewards / 0.05 * 100, 100);
+rewardBarEl.style.width = rewardPercent + "%";
+rewardPercentEl.innerText = rewardPercent.toFixed(1) + "%"; // <-- 1 decimale
 
   // APR
   aprEl.innerText = apr.toFixed(2)+"%";
