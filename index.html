@@ -13,15 +13,19 @@
 
 <div class="container">
 
+  <!-- HEADER DEFINITIVO -->
   <div class="header">
     <h1>Injective <span class="dot">•</span> Portfolio</h1>
     <div class="subtitle">Realtime staking & rewards dashboard</div>
   </div>
 
+  <!-- INPUT INDIRIZZO -->
   <input id="addressInput" placeholder="Inserisci indirizzo Injective (inj...)" />
 
+  <!-- CARDS WRAPPER -->
   <div class="cards-wrapper">
 
+    <!-- PRICE CARD -->
     <div class="card price-card">
       <div class="label">INJ Price</div>
       <div class="value-row"><span id="price">0.0000</span></div>
@@ -39,18 +43,21 @@
       </div>
     </div>
 
+    <!-- AVAILABLE CARD -->
     <div class="card">
       <div class="label">Available</div>
       <div class="value-row"><span id="available">0.000000</span></div>
       <div class="sub-row"><span id="availableUsd">≈ $0.00</span></div>
     </div>
 
+    <!-- STAKED CARD -->
     <div class="card">
       <div class="label">Staked</div>
       <div class="value-row"><span id="stake">0.0000</span></div>
       <div class="sub-row"><span id="stakeUsd">≈ $0.00</span></div>
     </div>
 
+    <!-- REWARDS CARD -->
     <div class="card">
       <div class="label">Rewards</div>
       <div class="value-row"><span id="rewards">0.0000000</span></div>
@@ -62,11 +69,13 @@
       </div>
     </div>
 
+    <!-- APR CARD -->
     <div class="card">
       <div class="label">APR</div>
       <div class="value-row"><span id="apr">0%</span></div>
     </div>
 
+    <!-- CHART CARD -->
     <div class="card chart-card">
       <div class="label">24h Price Chart</div>
       <canvas id="priceChart"></canvas>
@@ -74,6 +83,7 @@
 
   </div>
 
+  <!-- LAST UPDATE -->
   <div id="updated" class="last-update">Last update: --:--</div>
 
 </div>
