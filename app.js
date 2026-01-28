@@ -46,24 +46,6 @@ const fetchJSON = async url => {
   catch(e){ console.error("Fetch error:", url,e); return {}; }
 };
 
-// --- Animate digits individually ---
-function colorDigits(newVal, oldVal) {
-  const newS = newVal.toString();
-  const oldS = oldVal !== undefined ? oldVal.toString().padEnd(newS.length, "0") : "0".repeat(newS.length);
-  let res = "";
-
-  for (let i = 0; i < newS.length; i++) {
-    const cNew = newS[i];
-    const cOld = oldS[i] || "0";
-    if (cNew !== cOld && /\d/.test(cNew)) {
-      res += `<span style="color:${+newVal>+oldVal?"#22c55e":"#ef4444"}">${cNew}</span>`;
-    } else {
-      res += `<span style="color:#f9fafb">${cNew}</span>`;
-    }
-  }
-  return res;
-}
-
 // --- Address Input ---
 addressInput.value = address;
 addressInput.onchange = e => {
@@ -94,10 +76,10 @@ async function loadData(){
   } catch(e){ console.error("Errore dati Injective:",e);}
 }
 loadData();
-setInterval(loadData,60000); // aggiorna ogni minuto
+setInterval(loadData,2000); // aggiorniamo anche rewards ogni 2s
 
-// --- Fetch Price History 24h ---
-async function fetchHistory24h(){
+// --- Fetch Price History (24h) ---
+async function fetchHistory(){
   try{
     const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=1h&limit=24`);
     const d = await res.json();
@@ -109,7 +91,7 @@ async function fetchHistory24h(){
     drawChart();
   } catch(e){ console.error("Errore price history:", e);}
 }
-fetchHistory24h();
+fetchHistory();
 
 // --- Draw Chart ---
 function drawChart(){
@@ -165,7 +147,7 @@ function drawChart(){
   });
 }
 
-// --- Binance WS Price Real-Time ---
+// --- Binance WS ---
 function startWS(){
   const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
   ws.onmessage = e => {
@@ -182,11 +164,12 @@ startWS();
 function animate(){
   const lerp = (a,b,f)=>a+(b-a)*f;
 
-  // PRICE
+  // --- PRICE ---
   const oldPrice = displayedPrice;
-  displayedPrice = lerp(displayedPrice,targetPrice,0.1);
+  displayedPrice=lerp(displayedPrice,targetPrice,0.1);
   if(Math.abs(displayedPrice-oldPrice)>0.00001){
-    priceEl.innerHTML=colorDigits(displayedPrice.toFixed(4), oldPrice.toFixed(4));
+    colorNumber(priceEl, displayedPrice, oldPrice, 4);
+
     const delta=((displayedPrice-price24hOpen)/price24hOpen)*100;
     price24hEl.innerText=(delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
     price24hEl.className="sub "+(delta>0?"up":delta<0?"down":"");
@@ -209,38 +192,56 @@ function animate(){
   }
   priceLineEl.style.left=`${linePos}%`;
 
-  priceMinEl.innerText = price24hLow.toFixed(4);
-  priceMaxEl.innerText = price24hHigh.toFixed(4);
-  priceOpenEl.innerText = price24hOpen.toFixed(4);
+  // Valori min/open/max con 1 decimale in meno e font dei valori piccoli
+  priceMinEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hLow.toFixed(3)}</span>`;
+  priceMaxEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hHigh.toFixed(3)}</span>`;
+  priceOpenEl.innerHTML = `<span style="font-size:0.9rem;color:#9ca3af">${price24hOpen.toFixed(3)}</span>`;
 
-  // AVAILABLE
+  // --- AVAILABLE ---
   const oldAvailable = displayedAvailable;
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
-  availableEl.innerHTML=colorDigits(displayedAvailable.toFixed(6), oldAvailable.toFixed(6));
+  colorNumber(availableEl, displayedAvailable, oldAvailable,6);
   availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
-  // STAKE
+  // --- STAKE ---
   const oldStake = displayedStake;
   displayedStake=lerp(displayedStake,stakeInj,0.1);
-  stakeEl.innerHTML=colorDigits(displayedStake.toFixed(4), oldStake.toFixed(4));
+  colorNumber(stakeEl, displayedStake, oldStake,4);
   stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
-  // REWARDS
+  // --- REWARDS ---
   const oldRewards = displayedRewards;
-  displayedRewards=lerp(displayedRewards,rewardsInj,0.05);
-  rewardsEl.innerHTML=colorDigits(displayedRewards.toFixed(7), oldRewards.toFixed(7));
+  displayedRewards=lerp(displayedRewards,rewardsInj,0.1);
+  colorNumber(rewardsEl, displayedRewards, oldRewards,7);
   rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
 
   const rewardPercent = Math.min(displayedRewards/0.05*100,100);
   rewardBarEl.style.width=rewardPercent+"%";
-  rewardPercentEl.innerText=(rewardPercent.toFixed(0))+"%";
+  rewardPercentEl.innerText=(rewardPercent.toFixed(1))+"%";
 
-  // APR
+  // --- APR ---
   aprEl.innerText=apr.toFixed(2)+"%";
 
-  // LAST UPDATE
+  // --- LAST UPDATE ---
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
 }
 animate();
+
+// --- Color Numbers Helper ---
+function colorNumber(el,value,oldValue,decimals){
+  const newVal = value.toFixed(decimals);
+  const oldVal = oldValue.toFixed(decimals);
+
+  // Mostriamo ogni cifra separata
+  let html = '';
+  for(let i=0;i<newVal.length;i++){
+    if(newVal[i]!==oldVal[i]){
+      html += `<span style="color:${newVal[i]>oldVal[i]?'#22c55e':'#ef4444'}">${newVal[i]}</span>`;
+    } else {
+      html += `<span style="color:#f9fafb">${newVal[i]}</span>`;
+    }
+  }
+  el.innerHTML = html;
+}
