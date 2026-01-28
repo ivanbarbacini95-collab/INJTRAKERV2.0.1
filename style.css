@@ -30,6 +30,8 @@ body {
   font-size: 1rem;
 }
 
+#addressInput:focus { outline: none; border-color: #3b82f6; }
+
 .cards-wrapper {
   display: flex;
   flex-direction: column;
@@ -50,27 +52,25 @@ body {
 .value-row { display: flex; justify-content: flex-end; font-size: 1.4rem; font-weight: bold; }
 .sub-row { display: flex; justify-content: flex-end; font-size: 0.9rem; color: #9ca3af; }
 
-.price-bar-container, .reward-bar-container {
+.price-bar-container {
   position: relative;
   height: 24px;
   background: #111827;
   border-radius: 0.3rem;
-  overflow: hidden;
   margin-top: 0.5rem;
+  overflow: hidden;
 }
 
-.price-bar, .reward-bar {
+.price-bar {
   position: absolute;
   top: 0;
   left: 50%;
   height: 100%;
   width: 0%;
-  border-radius: 0.3rem;
+  background: linear-gradient(to right, #22c55e, #10b981);
+  transform-origin: center left;
   transition: width 0.2s linear, left 0.2s linear;
 }
-
-.price-bar { background: linear-gradient(to right,#22c55e,#10b981); }
-.reward-bar { background: linear-gradient(to right,#0ea5e9,#3b82f6); }
 
 .price-line {
   position: absolute;
@@ -83,11 +83,28 @@ body {
   transition: left 0.2s linear;
 }
 
-.price-values { position: relative; margin-top: 6px; height: 20px; }
-.price-extremes { font-weight: bold; position: absolute; font-size:0.9rem; color:#9ca3af; }
-.price-extremes.left { left: 0; }
-.price-extremes.center { left: 50%; transform: translateX(-50%); }
-.price-extremes.right { right: 0; }
+.price-values { position: relative; margin-top: 6px; font-size: 0.8rem; height: 20px; color:#9ca3af;}
+.price-extremes { font-weight: bold; }
+.price-extremes.left { position: absolute; left: 0; }
+.price-extremes.center { position: absolute; left: 50%; transform: translateX(-50%); }
+.price-extremes.right { position: absolute; right: 0; }
+
+.reward-bar-container {
+  background: #111827;
+  height: 24px;
+  border-radius: 0.3rem;
+  position: relative;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.reward-bar {
+  background: linear-gradient(to right, #0ea5e9, #3b82f6);
+  height: 100%;
+  width: 0%;
+  border-radius: 0.3rem;
+  transition: width 0.3s linear;
+}
 
 .reward-percent {
   position: absolute;
@@ -104,7 +121,15 @@ body {
 .up { color: #22c55e; transition: color 0.3s; }
 .down { color: #ef4444; transition: color 0.3s; }
 
-.chart-card { min-height: 250px; height: 300px; position: relative; }
-#priceChart { width: 100% !important; height: 100% !important; }
+.chart-card {
+  min-height: 250px;
+  height: 300px;
+  position: relative;
+}
+
+#priceChart {
+  width: 100% !important;
+  height: 100% !important;
+}
 
 @media (max-width: 768px) { .cards-wrapper { flex-direction: column; } }
