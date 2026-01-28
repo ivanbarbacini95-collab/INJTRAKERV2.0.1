@@ -1,4 +1,3 @@
-/* --- BODY / CONTAINER --- */
 body {
   font-family: Inter, sans-serif;
   background: #000;
@@ -28,7 +27,38 @@ body {
   text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
 }
 
-/* --- ADDRESS INPUT --- */
+.tf-selector {
+  position: relative;
+}
+
+.tf-icon {
+  cursor: pointer;
+  padding: 0.3rem 0.6rem;
+  background: #1e293b;
+  border-radius: 0.3rem;
+  user-select: none;
+}
+
+.tf-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  display: none;
+  flex-direction: column;
+  background: #111827;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.tf-menu div {
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  color: #f9fafb;
+}
+
+.tf-menu div.active, .tf-menu div:hover { background: #3b82f6; }
+
 #addressInput {
   padding: 0.8rem;
   border-radius: 0.5rem;
@@ -43,7 +73,6 @@ body {
   border-color: #3b82f6;
 }
 
-/* --- CARDS WRAPPER --- */
 .cards-wrapper {
   display: flex;
   flex-direction: column;
@@ -60,27 +89,11 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
-.card .label {
-  font-weight: bold;
-  font-size: 1.2rem;
-}
+.card .label { font-weight: bold; font-size: 1.2rem; }
 
-.value-row {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 1.4rem;
-  font-weight: bold;
-}
+.value-row { display: flex; justify-content: flex-end; font-size: 1.4rem; font-weight: bold; }
 
-.sub-row {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 0.9rem;
-  color: #9ca3af;
-}
-
-/* --- PRICE BAR --- */
-.price-card { padding-bottom: 1.4rem; }
+.sub-row { display: flex; justify-content: flex-end; font-size: 0.9rem; color: #9ca3af; }
 
 .price-bar-container {
   position: relative;
@@ -97,6 +110,7 @@ body {
   left: 50%;
   height: 100%;
   width: 0%;
+  background: linear-gradient(to right, #22c55e, #10b981);
   transform-origin: center left;
   transition: width 0.2s linear, left 0.2s linear;
 }
@@ -112,50 +126,12 @@ body {
   transition: left 0.2s linear;
 }
 
-/* --- MIN / OPEN / MAX --- */
-.price-values {
-  position: relative;
-  margin-top: 10px;
-  height: 22px;
-  font-size: .85rem;
-  color: #9ca3af;
-}
+.price-values { position: relative; margin-top: 6px; font-size: 0.8rem; height: 20px; }
+.price-extremes { color: #f9fafb; font-weight: bold; }
+.price-extremes.left { position: absolute; left: 0; }
+.price-extremes.center { position: absolute; left: 50%; transform: translateX(-50%); }
+.price-extremes.right { position: absolute; right: 0; }
 
-.price-extremes {
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-}
-
-.price-extremes.min {
-  position: absolute;
-  left: 0;
-  color: #ef4444;
-}
-
-.price-extremes.open {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.price-extremes.max {
-  position: absolute;
-  right: 0;
-  color: #22c55e;
-}
-
-/* --- OPEN TICK --- */
-.open-tick {
-  position: absolute;
-  left: 50%;
-  bottom: -6px;
-  width: 2px;
-  height: 6px;
-  background: #9ca3af;
-  transform: translateX(-50%);
-}
-
-/* --- REWARD BAR --- */
 .reward-bar-container {
   background: #111827;
   height: 24px;
@@ -183,46 +159,19 @@ body {
   font-weight: bold;
 }
 
-/* --- LAST UPDATE --- */
-.last-update {
-  font-size: 0.8rem;
-  text-align: center;
-  margin-top: 0.5rem;
-  color: #9ca3af;
-}
+.last-update { font-size: 0.8rem; text-align: center; margin-top: 0.5rem; color: #9ca3af; }
 
-/* --- UP / DOWN COLORS --- */
 .up { color: #22c55e; transition: color 0.3s; }
 .down { color: #ef4444; transition: color 0.3s; }
 
-/* --- CHART CARD --- */
-.chart-card canvas {
+.chart-card {
+  min-height: 250px;
+  position: relative;
+}
+
+#priceChart {
   width: 100%;
-  height: 200px;
+  height: 100%;
 }
 
-/* --- TIMEFRAME ICON --- */
-.tf-wrapper { position: relative; display: flex; align-items: center; gap: 0.5rem; }
-.tf-icon { cursor: pointer; user-select: none; font-size: 1.2rem; }
-.tf-menu {
-  display: none;
-  position: absolute;
-  top: 120%;
-  right: 0;
-  background: #1e293b;
-  border-radius: 0.3rem;
-  overflow: hidden;
-  flex-direction: column;
-}
-.tf-menu div {
-  padding: 0.3rem 0.6rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-.tf-menu div:hover, .tf-menu div.active { background: #3b82f6; color: #fff; }
-
-/* --- MEDIA QUERIES --- */
-@media (max-width: 768px) {
-  .cards-wrapper { flex-direction: column; }
-}
+@media (max-width: 768px) { .cards-wrapper { flex-direction: column; } }
