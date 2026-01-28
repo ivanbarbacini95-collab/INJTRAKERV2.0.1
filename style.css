@@ -1,4 +1,3 @@
-/* ===== Body e container ===== */
 body {
   font-family: Inter, sans-serif;
   background: #000;
@@ -15,7 +14,6 @@ body {
   gap: 1rem;
 }
 
-/* ===== Header ===== */
 .header {
   display: flex;
   align-items: center;
@@ -30,7 +28,6 @@ body {
   margin: 0;
 }
 
-/* ===== Input ===== */
 #addressInput {
   padding: 0.8rem;
   border-radius: 0.5rem;
@@ -45,7 +42,6 @@ body {
   border-color: #3b82f6;
 }
 
-/* ===== Cards ===== */
 .cards-wrapper {
   display: flex;
   flex-direction: column;
@@ -67,28 +63,23 @@ body {
   font-size: 1.2rem;
 }
 
-.value-row {
+.value-row, .sub-row {
   display: flex;
   justify-content: flex-end;
   font-size: 1.4rem;
   font-weight: bold;
 }
 
-.sub-row {
-  display: flex;
-  justify-content: flex-end;
-  font-size: 0.9rem;
-  color: #9ca3af;
-}
+.sub-row { font-size: 0.9rem; color: #9ca3af; }
 
-/* ===== Cifre singole ===== */
+/* Numeri singoli */
 .value-row span span,
 .sub-row span span {
   display: inline-block;
   transition: color 0.3s;
 }
 
-/* ===== Reward bar ===== */
+/* Reward bar */
 .reward-bar-container {
   background: #111827;
   height: 24px;
@@ -99,7 +90,7 @@ body {
 }
 
 .reward-bar {
-  background: #0ea5e9; /* azzurro */
+  background: #0ea5e9;
   height: 100%;
   width: 0%;
   border-radius: 0.3rem;
@@ -116,7 +107,7 @@ body {
   font-weight: bold;
 }
 
-/* ===== Price bar (TradingView style) ===== */
+/* Price bar TradingView style */
 .price-bar-container {
   position: relative;
   height: 24px;
@@ -139,11 +130,11 @@ body {
   top: 0;
   height: 100%;
   width: 2px;
-  background: #facc15; /* giallo */
+  background: #facc15;
   transition: left 0.2s linear;
 }
 
-/* ===== Valori sotto la barra ===== */
+/* Price values */
 .price-values {
   position: relative;
   margin-top: 6px;
@@ -160,7 +151,7 @@ body {
 .price-extremes.center { position: absolute; left: 50%; transform: translateX(-50%); }
 .price-extremes.right { position: absolute; right: 0; }
 
-/* ===== Effetti ATH/ATL ===== */
+/* Flash ATH/ATL */
 .ath { color: #facc15; animation: flash 0.6s alternate infinite; }
 .atl { color: #facc15; animation: flash 0.6s alternate infinite; }
 
@@ -169,7 +160,6 @@ body {
   to { opacity: 0.3; }
 }
 
-/* ===== Ultimo aggiornamento ===== */
 .last-update {
   font-size: 0.8rem;
   text-align: center;
@@ -177,11 +167,10 @@ body {
   color: #9ca3af;
 }
 
-/* ===== Colori numeri up/down ===== */
-.up { color: #22c55e !important; transition: color 0.3s; }
-.down { color: #ef4444 !important; transition: color 0.3s; }
+/* Colori up/down */
+.up { color: #22c55e !important; }
+.down { color: #ef4444 !important; }
 
-/* ===== Responsive ===== */
 @media (max-width: 768px) {
   .cards-wrapper { flex-direction: column; }
 }
