@@ -51,6 +51,7 @@ body {
   gap: 1rem;
 }
 
+/* Tutte le card con sfondo gradiente uniforme */
 .card {
   background: linear-gradient(135deg, #111827, #1e293b);
   border-radius: 0.5rem;
@@ -91,7 +92,7 @@ body {
 }
 
 .reward-bar {
-  background: #0ea5e9; /* azzurro */
+  background: #0ea5e9;
   height: 100%;
   width: 0%;
   border-radius: 0.3rem;
@@ -123,8 +124,8 @@ body {
   top: 0;
   height: 100%;
   width: 0%;
-  background: #22c55e; /* verde per rialzo */
-  transition: width 0.2s linear, left 0.2s linear, background 0.2s;
+  background: #22c55e;
+  transition: width 0.1s linear, left 0.1s linear, background 0.1s linear;
 }
 
 .price-line-open {
@@ -135,6 +136,17 @@ body {
   background: #f9fafb;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.price-line-current {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: #f59e0b;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: left 0.1s linear, background 0.1s linear;
 }
 
 /* Valori sotto la barra */
@@ -172,17 +184,11 @@ body {
 .up { color: #22c55e; transition: color 0.3s; }
 .down { color: #ef4444; transition: color 0.3s; }
 
-/* Grafico */
-.chart-card {
-  height: 260px; /* fissa l'altezza per evitare "infinito" */
+@media (max-width: 768px) {
+  .cards-wrapper { flex-direction: column; }
 }
 
 .chart-card canvas {
   width: 100% !important;
-  height: 100% !important;
-}
-
-@media (max-width: 768px) {
-  .cards-wrapper { flex-direction: column; }
-  .chart-card { height: 180px; }
+  height: 200px !important;
 }
