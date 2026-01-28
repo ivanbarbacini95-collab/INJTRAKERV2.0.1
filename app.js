@@ -10,7 +10,6 @@ let apr = 0;
 let displayedPriceLine = 0; // nuova linea mobile
 
 let chart, chartData = [];
-const rewardTargetsArray = [0.005,0.01,0.02,0.03,0.04,0.05];
 const rewardMax = 0.05;
 
 // Elementi DOM
@@ -22,37 +21,29 @@ const priceLineOpenEl = document.getElementById("priceLineOpen");
 const priceMinEl = document.getElementById("priceMin");
 const priceMaxEl = document.getElementById("priceMax");
 const priceOpenEl = document.getElementById("priceOpen");
-const priceLineCurrentEl = document.createElement("div"); // nuova linea
+const priceLineCurrentEl = document.createElement("div"); // linea mobile
 
 document.querySelector(".price-bar-container").appendChild(priceLineCurrentEl);
 priceLineCurrentEl.classList.add("price-line-current");
 
 const availableEl = document.getElementById("available");
 const availableUsdEl = document.getElementById("availableUsd");
-
 const stakeEl = document.getElementById("stake");
 const stakeUsdEl = document.getElementById("stakeUsd");
-
 const rewardsEl = document.getElementById("rewards");
 const rewardsUsdEl = document.getElementById("rewardsUsd");
 const rewardBarEl = document.getElementById("rewardBar");
 const rewardPercentEl = document.getElementById("rewardPercent");
-
 const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
-// Funzioni helper
+// Helper
 const fetchJSON = async url => {
-  try {
-    const res = await fetch(url);
-    return await res.json();
-  } catch(e){
-    console.error("Fetch error:", url, e);
-    return {};
-  }
+  try { return await (await fetch(url)).json(); }
+  catch(e){ console.error("Fetch error:", url, e); return {}; }
 };
 
-// Animazione dei numeri
+// Aggiorna numeri
 function updateNumber(el, oldV, newV, fixed){
   el.innerText = newV.toFixed(fixed);
   if(newV>oldV) el.classList.add("up");
@@ -60,7 +51,7 @@ function updateNumber(el, oldV, newV, fixed){
   setTimeout(()=>el.classList.remove("up","down"),500);
 }
 
-// ---------- Input indirizzo ----------
+// Input indirizzo
 addressInput.value = address;
 addressInput.onchange = e => {
   address = e.target.value.trim();
@@ -68,44 +59,36 @@ addressInput.onchange = e => {
   loadData();
 };
 
-// ---------- Load Injective Data ----------
+// Load Injective Data
 async function loadData(){
   if(!address) return;
-
   try{
-    // Bank balance
     const balanceRes = await fetchJSON(`https://lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`);
-    const injBalance = balanceRes.balances?.find(b => b.denom === "inj");
-    availableInj = injBalance ? Number(injBalance.amount)/1e18 : 0;
+    const injBalance = balanceRes.balances?.find(b => b.denom==="inj");
+    availableInj = injBalance? Number(injBalance.amount)/1e18 : 0;
 
-    // Staking
     const stakeRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/delegations/${address}`);
-    stakeInj = stakeRes.delegation_responses?.reduce((sum,d) => sum + Number(d.balance.amount||0),0)/1e18 || 0;
+    stakeInj = stakeRes.delegation_responses?.reduce((sum,d)=>sum+Number(d.balance.amount||0),0)/1e18||0;
 
-    // Rewards
     const rewardsRes = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
     rewardsInj = rewardsRes.rewards?.reduce((sum,r)=>sum+Number(r.reward[0]?.amount||0),0)/1e18||0;
 
-    // Inflation & pool
     const inflationRes = await fetchJSON(`https://lcd.injective.network/cosmos/mint/v1beta1/inflation`);
     const poolRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
     const bonded = Number(poolRes.pool?.bonded_tokens||0);
     const notBonded = Number(poolRes.pool?.not_bonded_tokens||0);
     apr = (inflationRes.inflation * (bonded + notBonded) / bonded) * 100;
-
-    console.log("Dati caricati:", {availableInj, stakeInj, rewardsInj, apr});
   } catch(e){ console.error("Errore caricamento dati Injective:", e); }
 }
-
 loadData();
 setInterval(loadData,60000);
 
-// ---------- Price History ----------
+// Price History
 async function fetchHistory(){
   try{
     const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96");
     const d = await res.json();
-    chartData = d.map(c => +c[4]);
+    chartData = d.map(c=>+c[4]);
     price24hOpen = +d[0][1];
     price24hLow = Math.min(...chartData);
     price24hHigh = Math.max(...chartData);
@@ -115,7 +98,7 @@ async function fetchHistory(){
 }
 fetchHistory();
 
-// ---------- Draw chart ----------
+// Draw Chart
 function drawChart(){
   const ctx=document.getElementById("priceChart");
   if(chart) chart.destroy();
@@ -126,93 +109,86 @@ function drawChart(){
   });
 }
 
-// ---------- Binance WS ----------
+// Binance WS
 function startWS(){
-  const ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage=e=>{
+  const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
+  ws.onmessage = e => {
     const p = +JSON.parse(e.data).p;
     targetPrice = p;
     if(p>price24hHigh) price24hHigh=p;
     if(p<price24hLow) price24hLow=p;
   };
-  ws.onclose=()=>setTimeout(startWS,3000);
+  ws.onclose = ()=>setTimeout(startWS,3000);
 }
 startWS();
 
-// ---------- Animate ----------
+// Animate
 function animate(){
-  // ---- Price principale ----
+  // ---- Price principale più reattiva ----
   const prevP = displayedPrice;
-  displayedPrice += (targetPrice - displayedPrice) * 0.15;
+  displayedPrice += (targetPrice - displayedPrice) * 0.25; // più sensibile
   updateNumber(priceEl, prevP, displayedPrice, 4);
 
   // Delta %
-  const delta = ((displayedPrice - price24hOpen) / price24hOpen) * 100;
-  price24hEl.innerText = (delta > 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(2) + "%";
-  price24hEl.className = "sub " + (delta > 0 ? "up" : delta < 0 ? "down" : "");
+  const delta = ((displayedPrice - price24hOpen)/price24hOpen)*100;
+  price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2) + "%";
+  price24hEl.className = "sub "+(delta>0?"up":delta<0?"down":"");
 
-  // ---- Price bar principale ----
+  // Price bar principale fluida
   const range = price24hHigh - price24hLow || 1;
-  const leftPercent = (displayedPrice - price24hOpen) / range * 100 + 50;
-  priceBarEl.style.left = leftPercent >= 50 ? "50%" : leftPercent + "%";
-  priceBarEl.style.width = Math.abs(leftPercent - 50) + "%";
-  priceBarEl.style.background = displayedPrice >= price24hOpen ? "#22c55e" : "#ef4444";
+  let leftPercent = (displayedPrice - price24hOpen)/range*100 + 50;
+  leftPercent = Math.max(0, Math.min(100, leftPercent));
+  priceBarEl.style.left = leftPercent>=50?"50%":leftPercent+"%";
+  priceBarEl.style.width = Math.abs(leftPercent-50)+"%";
+  priceBarEl.style.background = displayedPrice>=price24hOpen?"#22c55e":"#ef4444";
 
-  // ---- Seconda linea con easing ----
-  const targetLinePercent = ((displayedPrice - price24hLow) / range) * 100;
-  displayedPriceLine += (targetLinePercent - displayedPriceLine) * 0.2;
-  priceLineCurrentEl.style.left = displayedPriceLine + "%";
+  // Seconda linea mobile con easing
+  const targetLinePercent = ((displayedPrice - price24hLow)/range)*100;
+  displayedPriceLine += (targetLinePercent - displayedPriceLine)*0.25;
+  priceLineCurrentEl.style.left = displayedPriceLine+"%";
 
-  // ---- Price min/open/max ----
+  // Price min/open/max
   updateNumber(priceMinEl, Number(priceMinEl.innerText), price24hLow, 4);
   updateNumber(priceMaxEl, Number(priceMaxEl.innerText), price24hHigh, 4);
   updateNumber(priceOpenEl, Number(priceOpenEl.innerText), price24hOpen, 4);
 
-  // ---- Available ----
+  // Available
   const prevA = displayedAvailable;
   displayedAvailable += (availableInj-displayedAvailable)*0.1;
   updateNumber(availableEl, prevA, displayedAvailable, 6);
   updateNumber(availableUsdEl, prevA*displayedPrice, displayedAvailable*displayedPrice, 2);
 
-  // ---- Stake ----
+  // Stake
   const prevS = displayedStake;
   displayedStake += (stakeInj-displayedStake)*0.1;
   updateNumber(stakeEl, prevS, displayedStake, 4);
   updateNumber(stakeUsdEl, prevS*displayedPrice, displayedStake*displayedPrice, 2);
 
-  // ---- Rewards ----
+  // Rewards
   const prevR = displayedRewards;
   displayedRewards += (rewardsInj-displayedRewards)*0.05;
-  if(displayedRewards>prevR){
-    rewardsEl.classList.add("up");
-    rewardsUsdEl.classList.add("up");
-  } else if(displayedRewards<prevR){
-    rewardsEl.classList.add("down");
-    rewardsUsdEl.classList.add("down");
-  }
+  if(displayedRewards>prevR){ rewardsEl.classList.add("up"); rewardsUsdEl.classList.add("up"); }
+  else if(displayedRewards<prevR){ rewardsEl.classList.add("down"); rewardsUsdEl.classList.add("down"); }
   rewardsEl.innerText = displayedRewards.toFixed(6);
   rewardsUsdEl.innerText = (displayedRewards*displayedPrice).toFixed(2);
-  setTimeout(()=>{
-    rewardsEl.classList.remove("up","down");
-    rewardsUsdEl.classList.remove("up","down");
-  },600);
+  setTimeout(()=>{ rewardsEl.classList.remove("up","down"); rewardsUsdEl.classList.remove("up","down"); },600);
 
-  // Barra reward
+  // Reward bar
   const rewardPercent = Math.min(displayedRewards/rewardMax*100,100);
   rewardBarEl.style.width = rewardPercent+"%";
   rewardPercentEl.innerText = rewardPercent.toFixed(1)+"%";
 
-  // ---- APR ----
+  // APR
   aprEl.innerText = apr.toFixed(2)+"%";
 
-  // ---- Last Update ----
-  updatedEl.innerText = "Last Update: " + new Date().toLocaleTimeString();
+  // Last Update
+  updatedEl.innerText = "Last Update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
 }
 animate();
 
-// ---------- Aggiorna rewards ogni 3 secondi ----------
+// Aggiorna rewards ogni 3 secondi
 setInterval(async ()=>{
   if(!address) return;
   try{
