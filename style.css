@@ -30,8 +30,18 @@ body {
 }
 
 .header .dot {
-  color: #9ca3af;
-  -webkit-text-fill-color: #9ca3af;
+  color: #0ea5e9; /* azzurro */
+  -webkit-text-fill-color: #0ea5e9;
+  margin: 0 0.3rem;
+  display: inline-block;
+  position: relative;
+  animation: pulseGlow 1.5s infinite;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 0px #0ea5e9; }
+  50% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 15px #0ea5e9; }
+  100% { transform: scale(1); opacity: 0.7; box-shadow: 0 0 0px #0ea5e9; }
 }
 
 .subtitle {
