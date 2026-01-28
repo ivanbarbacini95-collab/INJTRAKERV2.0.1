@@ -145,13 +145,16 @@ function animate(){
   stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
   // Rewards
-  displayedRewards=lerp(displayedRewards,rewardsInj,0.05);
-  rewardsEl.innerText=displayedRewards.toFixed(6);
-  rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
+displayedRewards = lerp(displayedRewards, rewardsInj, 0.05);
+rewardsEl.innerText = displayedRewards.toFixed(6);
+rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
 
-  // Barra reward
-  const rewardPercent = Math.min(displayedRewards/0.05*100,100);
-  rewardBarEl.style.width=rewardPercent+"%";
+// Barra reward aggiornata al nuovo range (0 - 0.1)
+const rewardPercent = Math.min(displayedRewards / 0.1 * 100, 100);
+rewardBarEl.style.width = rewardPercent + "%";
+
+// Percentuale visibile sulla barra in formato 0,00%
+rewardPercentEl.innerText = (rewardPercent).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
 
   // APR
   aprEl.innerText=apr.toFixed(2)+"%";
