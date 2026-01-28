@@ -107,6 +107,37 @@ function startWS(){
 }
 startWS();
 
+/* PRICE BAR LOGIC */
+function updatePriceBar() {
+  const min = price24hLow;
+  const max = price24hHigh;
+  const open = price24hOpen;
+  const price = displayedPrice;
+
+  let linePercent;
+  if(price >= open){
+    linePercent = 50 + ((price - open)/(max - open))*50;
+  } else {
+    linePercent = 50 - ((open - price)/(open - min))*50;
+  }
+  linePercent = Math.max(0,Math.min(100,linePercent));
+  $("priceLine").style.left = linePercent + "%";
+
+  const barColor = price >= open ? "#22c55e" : "#ef4444";
+  $("priceBar").style.background = barColor;
+
+  let barWidth, barLeft;
+  if(price >= open){
+    barLeft = 50;
+    barWidth = linePercent - 50;
+  } else {
+    barLeft = linePercent;
+    barWidth = 50 - linePercent;
+  }
+  $("priceBar").style.left = barLeft + "%";
+  $("priceBar").style.width = barWidth + "%";
+}
+
 /* ANIMATION LOOP */
 function animate(){
   const old=displayedPrice;
@@ -120,6 +151,8 @@ function animate(){
   $("priceMin").textContent=price24hLow.toFixed(3);
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
+
+  updatePriceBar();
 
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
   colorNumber($("available"),displayedAvailable,availableInj,6);
