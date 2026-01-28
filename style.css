@@ -161,3 +161,42 @@ body {
   text-align: center;
   color: #9ca3af;
 }
+
+/* STATUS INDICATOR */
+.status {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.status .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: blink 1s infinite;
+}
+
+.status.online .dot {
+  background: #22c55e;
+  animation: blink 1s infinite;
+}
+
+.status.offline .dot {
+  background: #ef4444;
+  animation: none;
+}
+
+.status.online .text { color: #22c55e; }
+.status.offline .text { color: #ef4444; }
+
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0.3; }
+}
+
