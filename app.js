@@ -1,10 +1,10 @@
-// --- Variabili ---
+// Variabili
 let address = localStorage.getItem("inj_address")||"";
 let displayedPrice=0,targetPrice=0,price24hOpen=0,price24hLow=0,price24hHigh=0;
 let stakeInj=0,displayedStake=0,rewardsInj=0,displayedRewards=0,availableInj=0,displayedAvailable=0,apr=0;
-let chart, chartData=[], selectedTF='1h';
+let chart, chartData=[];
 
-// --- DOM ---
+// DOM
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
 const price24hEl = document.getElementById("price24h");
@@ -23,18 +23,16 @@ const rewardBarEl = document.getElementById("rewardBar");
 const rewardPercentEl = document.getElementById("rewardPercent");
 const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
-const tfIcon = document.querySelector(".tf-icon");
-const tfMenu = document.querySelector(".tf-menu");
 
-// --- Helpers ---
+// Helpers
 const fetchJSON = async url=>{ try{ const r=await fetch(url); return await r.json(); } catch(e){ console.error(e); return {}; } }
 const lerp=(a,b,f)=>a+(b-a)*f;
 
-// --- Address ---
+// Address
 addressInput.value=address;
 addressInput.onchange=e=>{ address=e.target.value.trim(); localStorage.setItem("inj_address",address); loadData(); };
 
-// --- Load Injective ---
+// Load Injective
 async function loadData(){
   if(!address) return;
   try{
@@ -58,52 +56,50 @@ async function loadData(){
 loadData();
 setInterval(loadData,2000);
 
-// --- Fetch Candles Binance ---
-async function fetchCandles(tf){
-  const tfMap={ "1h":"1h","12h":"12h","1d":"1d","1w":"1w","1M":"1M" };
-  let limit=100;
-  if(tf==="12h") limit=90; if(tf==="1d") limit=60; if(tf==="1w") limit=52; if(tf==="1M") limit=12;
-  const d=await fetchJSON(`https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=${tfMap[tf]}&limit=${limit}`);
-  chartData=d.map(c=>({ x:new Date(c[0]), o:+c[1], h:+c[2], l:+c[3], c:+c[4] }));
-  price24hOpen=chartData[0]?.o||0;
-  price24hLow=Math.min(...chartData.map(c=>c.l));
-  price24hHigh=Math.max(...chartData.map(c=>c.h));
-  targetPrice=chartData.at(-1)?.c||0;
+// Fetch 24h price
+async function fetch24h(){
+  const res=await fetchJSON("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=1h&limit=24");
+  chartData=res.map(c=>+c[4]);
+  price24hOpen=+res[0][1];
+  price24hLow=Math.min(...chartData);
+  price24hHigh=Math.max(...chartData);
+  targetPrice=chartData.at(-1);
   drawChart();
 }
+fetch24h();
 
-// --- Draw Chart ---
+// Draw line chart
 function drawChart(){
   const ctx=document.getElementById("priceChart").getContext("2d");
   if(chart) chart.destroy();
+  const gradient=ctx.createLinearGradient(0,0,0,200);
+  gradient.addColorStop(0,"rgba(34,197,94,0.3)");
+  gradient.addColorStop(1,"rgba(34,197,94,0)");
+  const lineColor=targetPrice>=price24hOpen?"#22c55e":"#ef4444";
   chart=new Chart(ctx,{
-    type:"candlestick",
-    data:{ datasets:[{ label:"INJ/USDT", data:chartData, color:{up:"#22c55e", down:"#ef4444", unchanged:"#9ca3af"} }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} },
-      scales:{ x:{ type:"time", ticks:{ color:"#9ca3af" }, grid:{ color:"#1e293b" } },
-               y:{ ticks:{ color:"#9ca3af" }, grid:{ color:"#1e293b" } } } }
+    type:"line",
+    data:{ labels:chartData.map((_,i)=>i), datasets:[{ data:chartData, borderColor:lineColor, backgroundColor:gradient, tension:0.3, fill:true, pointRadius:2, pointHoverRadius:6, pointBackgroundColor:lineColor }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}}, scales:{ x:{ display:true, grid:{ color:"#1e293b" }, ticks:{ color:"#9ca3af"}}, y:{ display:true, grid:{ color:"#1e293b"}, ticks:{ color:"#9ca3af"}}}}
   });
 }
 
-// --- WebSocket Realtime ---
+// WebSocket
 function startWS(){
   const ws=new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
   ws.onmessage=e=>{
     const p=+JSON.parse(e.data).p;
-    if(chartData.length>0){
-      const last=chartData[chartData.length-1];
-      last.h=Math.max(last.h,p); last.l=Math.min(last.l,p); last.c=p;
-      targetPrice=p;
-      drawChart();
-    }
+    targetPrice=p;
+    if(p>price24hHigh) price24hHigh=p;
+    if(p<price24hLow) price24hLow=p;
+    chartData[chartData.length-1]=p;
+    drawChart();
   };
   ws.onclose=()=>setTimeout(startWS,3000);
 }
 startWS();
 
-// --- Animate Numbers ---
+// Animate numbers
 function animate(){
-  // Price
   const oldPrice=displayedPrice;
   displayedPrice=lerp(displayedPrice,targetPrice,0.1);
   if(Math.abs(displayedPrice-oldPrice)>0.00001){
@@ -113,7 +109,6 @@ function animate(){
     price24hEl.className="sub "+(delta>0?"up":delta<0?"down":"");
   }
 
-  // Price bar
   const center=50;
   const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
   let linePos=displayedPrice>=price24hOpen?center+percent:center-percent;
@@ -125,17 +120,14 @@ function animate(){
   priceMaxEl.innerText=price24hHigh.toFixed(4);
   priceOpenEl.innerText=price24hOpen.toFixed(4);
 
-  // Available
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
   availableEl.innerText=displayedAvailable.toFixed(6);
   availableUsdEl.innerText=(displayedAvailable*displayedPrice).toFixed(2);
 
-  // Stake
   displayedStake=lerp(displayedStake,stakeInj,0.1);
   stakeEl.innerHTML=colorDigits(displayedStake.toFixed(4),displayedStake-0.0001);
   stakeUsdEl.innerText=(displayedStake*displayedPrice).toFixed(2);
 
-  // Rewards
   displayedRewards=lerp(displayedRewards,rewardsInj,0.05);
   rewardsEl.innerHTML=colorDigits(displayedRewards.toFixed(7),displayedRewards-0.0000001);
   rewardsUsdEl.innerText=(displayedRewards*displayedPrice).toFixed(2);
@@ -143,7 +135,6 @@ function animate(){
   rewardBarEl.style.width=rewardPercent+"%";
   rewardPercentEl.innerText=rewardPercent.toFixed(1)+"%";
 
-  // APR
   aprEl.innerText=apr.toFixed(2)+"%";
   updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
 
@@ -151,7 +142,7 @@ function animate(){
 }
 animate();
 
-// --- Color digits ---
+// Color digits
 function colorDigits(newVal,oldVal){
   let res="";
   const newS=newVal.toString(), oldS=(oldVal||0).toFixed(newS.split(".")[1]?.length||4);
@@ -163,16 +154,3 @@ function colorDigits(newVal,oldVal){
   }
   return res;
 }
-
-// --- Timeframe menu ---
-tfIcon.addEventListener("click",()=>{ tfMenu.style.display=tfMenu.style.display==="flex"?"none":"flex"; });
-tfMenu.querySelectorAll("div").forEach(el=>{
-  el.addEventListener("click",()=>{
-    selectedTF=el.dataset.tf;
-    tfMenu.querySelectorAll("div").forEach(d=>d.classList.remove("active"));
-    el.classList.add("active");
-    fetchCandles(selectedTF);
-  });
-});
-
-fetchCandles(selectedTF);
