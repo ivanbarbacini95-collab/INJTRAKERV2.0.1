@@ -14,12 +14,6 @@ body {
   gap: 1rem;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
 .header h1 {
   font-size: 1.8rem;
   font-weight: 800;
@@ -68,7 +62,6 @@ body {
   justify-content: flex-end;
   font-size: 1.4rem;
   font-weight: bold;
-  font-variant-numeric: tabular-nums;
 }
 
 .sub-row {
@@ -76,24 +69,7 @@ body {
   justify-content: flex-end;
   font-size: 0.9rem;
   color: #9ca3af;
-  font-variant-numeric: tabular-nums;
 }
-
-.digit-wrapper {
-  display: inline-block;
-  overflow: hidden;
-  height: 1em;
-  vertical-align: bottom;
-  position: relative;
-}
-
-.digit-inner {
-  display: inline-block;
-  transition: transform 0.3s ease, color 0.3s ease;
-}
-
-.up .digit-inner { color: #22c55e; }
-.down .digit-inner { color: #ef4444; }
 
 .reward-bar-container {
   background: #111827;
@@ -131,22 +107,30 @@ body {
   overflow: hidden;
 }
 
-.price-bar {
+.price-bar, .price-bar-fill {
   position: absolute;
   top: 0;
   height: 100%;
   width: 0%;
-  background: #22c55e;
   transition: width 0.2s linear, left 0.2s linear, background 0.2s;
 }
 
-.price-line-current {
+.price-bar {
+  background: #22c55e;
+}
+
+.price-bar-fill {
+  background: #facc15;
+}
+
+.price-line-open {
   position: absolute;
   top: 0;
   height: 100%;
   width: 2px;
-  background: #facc15;
-  transition: left 0.2s linear;
+  background: #f9fafb;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .price-values {
@@ -180,7 +164,16 @@ body {
   color: #9ca3af;
 }
 
-.up, .down { transition: color 0.3s; }
+.up { color: #22c55e; transition: color 0.3s; }
+.down { color: #ef4444; transition: color 0.3s; }
+
+.digit-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.digit-inner.up { color: #22c55e; }
+.digit-inner.down { color: #ef4444; }
 
 @media (max-width: 768px) {
   .cards-wrapper { flex-direction: column; }
