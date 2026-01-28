@@ -14,6 +14,7 @@ let chart, chartData = [];
 // Elementi DOM
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
+const priceArrowEl = document.getElementById("priceArrow");
 const price24hEl = document.getElementById("price24h");
 const priceBarEl = document.getElementById("priceBar");
 const priceLineEl = document.getElementById("priceLine");
@@ -34,6 +35,8 @@ const rewardPercentEl = document.getElementById("rewardPercent");
 
 const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
+
+let arrowTimeout;
 
 // Helper fetch
 const fetchJSON = async url => { 
@@ -152,8 +155,18 @@ function animateDigits(element, current, target, decimals = 4) {
 function animate(){
     const center=50;
 
-    // Price
+    // Price con freccia
+    let oldPrice = displayedPrice;
     displayedPrice = animateDigits(priceEl, displayedPrice, targetPrice, 4);
+
+    if(Math.abs(displayedPrice - oldPrice) > 0.00001){
+        const up = displayedPrice > oldPrice;
+        priceArrowEl.style.color = up ? "#22c55e" : "#ef4444";
+        priceArrowEl.innerText = up ? "▲" : "▼";
+        priceArrowEl.style.display = "inline";
+        clearTimeout(arrowTimeout);
+        arrowTimeout = setTimeout(() => { priceArrowEl.style.display = "none"; }, 1500);
+    }
 
     const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
     price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
