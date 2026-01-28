@@ -117,82 +117,96 @@ function startWS(){
 }
 startWS();
 
-// Helper per animare solo i numeri che cambiano con colore rosso/verde
-function animateNumber(element, current, target, decimals=4) {
+// Animazione cifra per cifra con colore solo sulle cifre cambiate
+function animateDigits(element, current, target, decimals = 4) {
     current = Number(current) || 0;
     target = Number(target) || 0;
-    if(current.toFixed(decimals) === target.toFixed(decimals)) return target;
 
-    const isUp = target > current;
-    element.style.color = isUp ? "#22c55e" : "#ef4444";
+    if(current.toFixed(decimals) === target.toFixed(decimals)) {
+        element.innerHTML = target.toFixed(decimals);
+        element.style.color = "#f9fafb"; // neutro
+        return target;
+    }
 
     const step = (target - current) * 0.1;
     const next = current + step;
 
-    element.innerText = next.toFixed(decimals);
+    const currentStr = current.toFixed(decimals);
+    const nextStr = next.toFixed(decimals);
+    let html = "";
+
+    for(let i = 0; i < nextStr.length; i++) {
+        if(currentStr[i] !== nextStr[i]) {
+            const isUp = next > current;
+            html += `<span style="color:${isUp ? "#22c55e" : "#ef4444"}">${nextStr[i]}</span>`;
+        } else {
+            html += `<span style="color:#f9fafb">${nextStr[i]}</span>`;
+        }
+    }
+
+    element.innerHTML = html;
     return next;
 }
 
-// Update numbers and bars
+// Update numeri e barre
 function animate(){
-  const center=50;
-  const lerp = (a,b,f)=>a+(b-a)*f;
+    const center=50;
 
-  // Price
-  displayedPrice = animateNumber(priceEl, displayedPrice, targetPrice, 4);
+    // Price
+    displayedPrice = animateDigits(priceEl, displayedPrice, targetPrice, 4);
 
-  const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
-  price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
-  price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
+    const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
+    price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2)+"%";
+    price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
 
-  // Barra prezzo dal centro con linea gialla
-  const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
-  let linePos;
-  if(displayedPrice>=price24hOpen){
-    linePos=center+percent;
-    priceBarEl.style.left=`${center}%`;
-    priceBarEl.style.width=`${linePos-center}%`;
-    priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
-  } else{
-    linePos=center-percent;
-    priceBarEl.style.left=`${linePos}%`;
-    priceBarEl.style.width=`${center-linePos}%`;
-    priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
-  }
-  priceLineEl.style.left=`${linePos}%`;
+    // Barra prezzo
+    const percent=Math.min(Math.abs(displayedPrice-price24hOpen)/Math.max(price24hHigh-price24hLow,0.0001)*50,50);
+    let linePos;
+    if(displayedPrice>=price24hOpen){
+        linePos=center+percent;
+        priceBarEl.style.left=`${center}%`;
+        priceBarEl.style.width=`${linePos-center}%`;
+        priceBarEl.style.background="linear-gradient(to right,#22c55e,#10b981)";
+    } else{
+        linePos=center-percent;
+        priceBarEl.style.left=`${linePos}%`;
+        priceBarEl.style.width=`${center-linePos}%`;
+        priceBarEl.style.background="linear-gradient(to right,#ef4444,#f87171)";
+    }
+    priceLineEl.style.left=`${linePos}%`;
 
-  // Min/Open/Max
-  priceMinEl.innerText=price24hLow.toFixed(4);
-  priceMaxEl.innerText=price24hHigh.toFixed(4);
-  priceOpenEl.innerText=price24hOpen.toFixed(4);
+    // Min/Open/Max
+    priceMinEl.innerText=price24hLow.toFixed(4);
+    priceMaxEl.innerText=price24hHigh.toFixed(4);
+    priceOpenEl.innerText=price24hOpen.toFixed(4);
 
-  // Available
-  displayedAvailable = animateNumber(availableEl, displayedAvailable, availableInj, 6);
-  availableUsdEl.innerText = (displayedAvailable * displayedPrice).toFixed(2);
+    // Available
+    displayedAvailable = animateDigits(availableEl, displayedAvailable, availableInj, 6);
+    availableUsdEl.innerText = (displayedAvailable * displayedPrice).toFixed(2);
 
-  // Stake
-  displayedStake = animateNumber(stakeEl, displayedStake, stakeInj, 4);
-  stakeUsdEl.innerText = (displayedStake * displayedPrice).toFixed(2);
+    // Stake
+    displayedStake = animateDigits(stakeEl, displayedStake, stakeInj, 4);
+    stakeUsdEl.innerText = (displayedStake * displayedPrice).toFixed(2);
 
-  // Rewards
-  displayedRewards = animateNumber(rewardsEl, displayedRewards, rewardsInj, 6);
-  rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
+    // Rewards
+    displayedRewards = animateDigits(rewardsEl, displayedRewards, rewardsInj, 6);
+    rewardsUsdEl.innerText = (displayedRewards * displayedPrice).toFixed(2);
 
-  // Barra reward animata (0 → 0.05 INJ)
-  const maxReward = 0.05;
-  const targetPercent = Math.min(displayedRewards / maxReward * 100, 100);
-  let currentWidth = parseFloat(rewardBarEl.style.width) || 0;
-  const step = (targetPercent - currentWidth) * 0.1;
-  rewardBarEl.style.width = (currentWidth + step) + "%";
-  rewardPercentEl.innerText = ((currentWidth + step).toFixed(0)) + "%";
+    // Barra reward animata (0 → 0.05 INJ)
+    const maxReward = 0.05;
+    const targetPercent = Math.min(displayedRewards / maxReward * 100, 100);
+    let currentWidth = parseFloat(rewardBarEl.style.width) || 0;
+    const step = (targetPercent - currentWidth) * 0.1;
+    rewardBarEl.style.width = (currentWidth + step) + "%";
+    rewardPercentEl.innerText = ((currentWidth + step).toFixed(0)) + "%";
 
-  // APR
-  apr = animateNumber(aprEl, apr, apr, 2);
-  aprEl.innerText = apr.toFixed(2) + "%";
+    // APR
+    apr = animateDigits(aprEl, apr, apr, 2);
+    aprEl.innerText = apr.toFixed(2) + "%";
 
-  // Last update
-  updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
+    // Last update
+    updatedEl.innerText="Last Update: "+new Date().toLocaleTimeString();
 
-  requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 }
 animate();
