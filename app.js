@@ -1,28 +1,24 @@
-// ---------- Variabili globali ----------
 let address = localStorage.getItem("inj_address") || "";
 
-// Dati Injective
-let availableInj = 0, displayedAvailable = 0;
+// Variabili
+let displayedPrice = 0, targetPrice = 0, price24hOpen = 0;
+let price24hLow = 0, price24hHigh = 0;
 let stakeInj = 0, displayedStake = 0;
 let rewardsInj = 0, displayedRewards = 0;
+let availableInj = 0, displayedAvailable = 0;
 let apr = 0;
-
-// Prezzo
-let displayedPrice = 0, targetPrice = 0;
-let price24hOpen = 0, price24hLow = 0, price24hHigh = 0;
 
 // Chart
 let chart, chartData = [];
-
-// Reward bar
 const rewardMax = 0.05;
 
-// ---------- Elementi DOM ----------
+// DOM
 const addressInput = document.getElementById("addressInput");
 const priceEl = document.getElementById("price");
 const price24hEl = document.getElementById("price24h");
 const priceBarEl = document.getElementById("priceBar");
 const priceLineOpenEl = document.getElementById("priceLineOpen");
+const priceLineCurrentEl = document.getElementById("priceLineCurrent");
 const priceMinEl = document.getElementById("priceMin");
 const priceMaxEl = document.getElementById("priceMax");
 const priceOpenEl = document.getElementById("priceOpen");
@@ -41,26 +37,23 @@ const rewardPercentEl = document.getElementById("rewardPercent");
 const aprEl = document.getElementById("apr");
 const updatedEl = document.getElementById("updated");
 
-// ---------- Helper ----------
+// Helper
 const fetchJSON = async url => {
-  try {
+  try{
     const res = await fetch(url);
     if(!res.ok) throw new Error("Fetch fallito");
     return await res.json();
-  } catch(e){
-    console.error("Fetch error:", url, e);
-    return null;
-  }
+  }catch(e){ console.error("Fetch error:", url,e); return null; }
 };
 
 function updateNumber(el, oldV, newV, fixed){
   el.innerText = newV.toFixed(fixed);
-  if(newV > oldV) el.classList.add("up");
-  else if(newV < oldV) el.classList.add("down");
+  if(newV>oldV) el.classList.add("up");
+  else if(newV<oldV) el.classList.add("down");
   setTimeout(()=>el.classList.remove("up","down"),500);
 }
 
-// ---------- Input indirizzo ----------
+// Input
 addressInput.value = address;
 addressInput.onchange = e => {
   address = e.target.value.trim();
@@ -68,87 +61,59 @@ addressInput.onchange = e => {
   loadData();
 };
 
-// ---------- Load dati Injective ----------
+// Load dati Injective
 async function loadData(){
   if(!address) return;
-
   try{
-    // Balance
     const balanceRes = await fetchJSON(`https://lcd.injective.network/cosmos/bank/v1beta1/balances/${address}`);
-    const injBalance = balanceRes?.balances?.find(b=>b.denom==="inj");
-    availableInj = injBalance ? Number(injBalance.amount)/1e18 : 0;
+    availableInj = balanceRes?.balances?.find(b=>b.denom==="inj") ? Number(balanceRes.balances.find(b=>b.denom==="inj").amount)/1e18 : 0;
 
-    // Stake
     const stakeRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/delegations/${address}`);
-    stakeInj = stakeRes?.delegation_responses?.reduce((sum,d)=>sum+Number(d.balance.amount||0),0)/1e18 || 0;
+    stakeInj = stakeRes?.delegation_responses?.reduce((sum,d)=>sum+Number(d.balance.amount||0),0)/1e18||0;
 
-    // Rewards
     const rewardsRes = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
     rewardsInj = rewardsRes?.rewards?.reduce((sum,r)=>sum+Number(r.reward[0]?.amount||0),0)/1e18||0;
 
-    // APR
     const inflationRes = await fetchJSON(`https://lcd.injective.network/cosmos/mint/v1beta1/inflation`);
     const poolRes = await fetchJSON(`https://lcd.injective.network/cosmos/staking/v1beta1/pool`);
     const bonded = Number(poolRes?.pool?.bonded_tokens||0);
     const notBonded = Number(poolRes?.pool?.not_bonded_tokens||0);
-    apr = (inflationRes?.inflation * (bonded+notBonded)/bonded)*100 || 0;
-
-  } catch(e){ 
-    console.error("Errore caricamento dati Injective:", e);
-  }
+    apr = (inflationRes?.inflation*(bonded+notBonded)/bonded)*100||0;
+  }catch(e){ console.error("Errore caricamento dati Injective:", e); }
 }
 
-// Aggiorna dati ogni 60s
 loadData();
 setInterval(loadData,60000);
 
-// ---------- Price History ----------
+// Price History
 async function fetchHistory(){
   try{
     const res = await fetch("https://api.binance.com/api/v3/klines?symbol=INJUSDT&interval=15m&limit=96");
     const d = await res.json();
-    chartData = d.map(c => +c[4]);
+    chartData = d.map(c=>+c[4]);
     price24hOpen = +d[0][1];
     price24hLow = Math.min(...chartData);
     price24hHigh = Math.max(...chartData);
     targetPrice = chartData.at(-1);
     drawChart();
-  } catch(e){ console.error("Errore price history:", e); }
+  }catch(e){ console.error("Errore price history:", e); }
 }
 fetchHistory();
 
-// ---------- Draw Chart ----------
 function drawChart(){
   const ctx = document.getElementById("priceChart");
   if(chart) chart.destroy();
   chart = new Chart(ctx,{
     type:"line",
-    data:{
-      labels: chartData.map((_,i)=>i),
-      datasets:[{
-        data: chartData,
-        borderColor: displayedPrice>=price24hOpen ? "#22c55e" : "#ef4444",
-        backgroundColor: "rgba(34,197,94,0.2)",
-        tension:0.3,
-        fill:true
-      }]
-    },
-    options:{
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{display:false},
-        y:{display:true}
-      },
-      responsive:true,
-      maintainAspectRatio:false
-    }
+    data:{labels:chartData.map((_,i)=>i),datasets:[{data:chartData,borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,0.2)",tension:0.3,fill:true}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{display:false}},responsive:true,maintainAspectRatio:false}
   });
 }
 
-// ---------- Binance WebSocket ----------
+// Binance WS
 function startWS(){
   const ws = new WebSocket("wss://stream.binance.com:9443/ws/injusdt@trade");
-  ws.onmessage = e => {
+  ws.onmessage = e=>{
     const p = +JSON.parse(e.data).p;
     targetPrice = p;
     if(p>price24hHigh) price24hHigh=p;
@@ -158,26 +123,30 @@ function startWS(){
 }
 startWS();
 
-// ---------- Animazione numeri ----------
+// Animate
 function animate(){
-  // Prezzo
-  const prevPrice = displayedPrice;
-  displayedPrice += (targetPrice-displayedPrice)*0.1;
-  updateNumber(priceEl, prevPrice, displayedPrice, 4);
+  const prevP = displayedPrice;
+  displayedPrice += (targetPrice-displayedPrice)*0.25; // più sensibile
+  updateNumber(priceEl, prevP, displayedPrice, 4);
 
   // Delta %
   const delta = ((displayedPrice-price24hOpen)/price24hOpen)*100;
-  price24hEl.innerText = (delta>0?"▲ ":"▼ ") + Math.abs(delta).toFixed(2) + "%";
-  price24hEl.className = "sub " + (delta>0?"up":delta<0?"down":"");
+  price24hEl.innerText = (delta>0?"▲ ":"▼ ")+Math.abs(delta).toFixed(2)+"%";
+  price24hEl.className="sub "+(delta>0?"up":delta<0?"down":"");
 
   // Price bar
-  const minVal = price24hLow, maxVal = price24hHigh, range = maxVal-minVal||1;
-  const leftPercent = (displayedPrice-price24hOpen)/range*50 + 50;
-  priceBarEl.style.left = leftPercent >= 50 ? "50%" : leftPercent+"%";
+  const range = price24hHigh-price24hLow||1;
+  const leftPercent = ((displayedPrice-price24hOpen)/range)*50+50;
+  priceBarEl.style.left = leftPercent>=50?"50%":leftPercent+"%";
   priceBarEl.style.width = Math.abs(leftPercent-50)+"%";
   priceBarEl.style.background = displayedPrice>=price24hOpen?"#22c55e":"#ef4444";
 
-  // Min / Open / Max
+  // Linea corrente mobile
+  const pricePercent = ((displayedPrice-price24hLow)/range)*100;
+  priceLineCurrentEl.style.left = pricePercent+"%";
+  priceLineCurrentEl.style.background = displayedPrice>=price24hOpen?"#22c55e":"#ef4444";
+
+  // Min/Open/Max
   updateNumber(priceMinEl, Number(priceMinEl.innerText)||0, price24hLow, 4);
   updateNumber(priceMaxEl, Number(priceMaxEl.innerText)||0, price24hHigh, 4);
   updateNumber(priceOpenEl, Number(priceOpenEl.innerText)||0, price24hOpen, 4);
@@ -197,21 +166,12 @@ function animate(){
   // Rewards
   const prevR = displayedRewards;
   displayedRewards += (rewardsInj-displayedRewards)*0.05;
+  if(displayedRewards>prevR){ rewardsEl.classList.add("up"); rewardsUsdEl.classList.add("up"); }
+  else if(displayedRewards<prevR){ rewardsEl.classList.add("down"); rewardsUsdEl.classList.add("down"); }
 
-  if(displayedRewards>prevR){
-    rewardsEl.classList.add("up");
-    rewardsUsdEl.classList.add("up");
-  } else if(displayedRewards<prevR){
-    rewardsEl.classList.add("down");
-    rewardsUsdEl.classList.add("down");
-  }
   rewardsEl.innerText = displayedRewards.toFixed(6);
   rewardsUsdEl.innerText = (displayedRewards*displayedPrice).toFixed(2);
-
-  setTimeout(()=>{
-    rewardsEl.classList.remove("up","down");
-    rewardsUsdEl.classList.remove("up","down");
-  },600);
+  setTimeout(()=>{ rewardsEl.classList.remove("up","down"); rewardsUsdEl.classList.remove("up","down"); },600);
 
   // Reward bar
   const rewardPercent = Math.min(displayedRewards/rewardMax*100,100);
@@ -222,17 +182,17 @@ function animate(){
   aprEl.innerText = apr.toFixed(2)+"%";
 
   // Last update
-  updatedEl.innerText = "Last Update: " + new Date().toLocaleTimeString();
+  updatedEl.innerText = "Last Update: "+new Date().toLocaleTimeString();
 
   requestAnimationFrame(animate);
 }
 animate();
 
-// ---------- Aggiorna rewards ogni 3s ----------
-setInterval(async ()=>{
+// Aggiorna rewards ogni 3s
+setInterval(async()=>{
   if(!address) return;
   try{
     const rewardsRes = await fetchJSON(`https://lcd.injective.network/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
     rewardsInj = rewardsRes?.rewards?.reduce((sum,r)=>sum+Number(r.reward[0]?.amount||0),0)/1e18||0;
-  } catch(e){ console.error("Errore aggiornamento rewards:", e); }
+  }catch(e){ console.error("Errore aggiornamento rewards:", e); }
 },3000);
