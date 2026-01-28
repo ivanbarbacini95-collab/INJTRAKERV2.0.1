@@ -46,12 +46,18 @@ body {
   border: 2px solid #4b5563;
   background: #0a0f1f;
   color: #f9fafb;
+  outline: none;
+}
+
+#addressInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 /* CARDS */
 .cards-wrapper {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 }
 
@@ -62,6 +68,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  transition: all 0.2s ease;
 }
 
 .label {
@@ -95,7 +107,7 @@ body {
 .price-bar {
   position: absolute;
   height: 100%;
-  background: linear-gradient(to right, #22c55e, #10b981);
+  transition: width 0.3s ease, left 0.3s ease, background 0.3s ease;
 }
 
 .price-line {
@@ -103,6 +115,7 @@ body {
   width: 2px;
   height: 100%;
   background: #facc15;
+  transition: left 0.3s ease;
 }
 
 .price-values {
@@ -128,6 +141,7 @@ body {
 .reward-bar {
   height: 100%;
   background: linear-gradient(to right, #0ea5e9, #3b82f6);
+  transition: width 0.3s ease;
 }
 
 .reward-percent {
