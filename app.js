@@ -12,6 +12,7 @@ let chart, chartData = [], ws;
 const $ = id => document.getElementById(id);
 const lerp = (a,b,f)=>a+(b-a)*f;
 
+// Animazione numeri
 function colorNumber(el, n, o, d){
   const ns=n.toFixed(d), os=o.toFixed(d);
   el.innerHTML=[...ns].map((c,i)=>
@@ -21,12 +22,13 @@ function colorNumber(el, n, o, d){
   ).join("");
 }
 
+// Fetch JSON sicuro
 async function fetchJSON(url){
   try{ return await (await fetch(url)).json(); }
   catch{ return {}; }
 }
 
-/* ADDRESS INPUT */
+/* INPUT INDIRIZZO */
 $("addressInput").value = address;
 $("addressInput").onchange = e=>{
   address=e.target.value.trim();
@@ -93,6 +95,7 @@ function initChart(){
   });
 }
 
+// Aggiorna grafico 24h ogni 5 minuti
 function updateChart24h(){
   if(!chart) return;
   chartData.shift();
@@ -100,9 +103,7 @@ function updateChart24h(){
   chart.data.datasets[0].data = chartData;
   chart.update("none");
 }
-
-// aggiorna grafico ogni 5 minuti
-setInterval(updateChart24h, 5*60*1000);
+setInterval(updateChart24h,5*60*1000);
 
 /* WEBSOCKET */
 function startWS(){
@@ -135,33 +136,29 @@ function animate(){
   $("priceOpen").textContent=price24hOpen.toFixed(3);
   $("priceMax").textContent=price24hHigh.toFixed(3);
 
- // BARRA DEL PREZZO CENTRATA
-if(price24hHigh > price24hLow){
-  const delta = displayedPrice - price24hOpen; // differenza dal prezzo di apertura
-  const maxDelta = Math.max(price24hHigh - price24hOpen, price24hOpen - price24hLow);
-  const pct = Math.min(Math.abs(delta) / maxDelta, 1) * 50; // 50% max a destra o sinistra
+  // BARRA DEL PREZZO CENTRATA CON LINEA GIALLA CHE TRASCINA
+  if(price24hHigh > price24hLow){
+    const delta = displayedPrice - price24hOpen;
+    const maxDelta = Math.max(price24hHigh - price24hOpen, price24hOpen - price24hLow);
+    let pct = Math.min(Math.abs(delta)/maxDelta,1)*50;
 
-  // colore verde o rosso
-  const color = delta>=0 ? "#22c55e" : "#ef4444";
-  $("priceBar").style.background = color;
+    // Colore barra
+    const color = delta>=0 ? "#22c55e" : "#ef4444";
+    $("priceBar").style.background = color;
 
-  // la barra parte dal centro e arriva fino al prezzo attuale (linea gialla)
-  if(delta >= 0){
-    $("priceBar").style.left = "50%";
-    $("priceBar").style.width = pct + "%";
-  } else {
-    $("priceBar").style.left = (50 - pct) + "%";
-    $("priceBar").style.width = pct + "%";
+    // Linea gialla
+    const linePct = ((displayedPrice - price24hLow) / (price24hHigh - price24hLow)) * 100;
+    $("priceLine").style.left = linePct + "%";
+
+    // Barra verde/rossa segue la linea
+    if(linePct >= 50){
+      $("priceBar").style.left = "50%";
+      $("priceBar").style.width = linePct - 50 + "%";
+    } else {
+      $("priceBar").style.left = linePct + "%";
+      $("priceBar").style.width = 50 - linePct + "%";
+    }
   }
-
-  // linea gialla sempre sul prezzo attuale
-  const linePct = ((displayedPrice - price24hLow) / (price24hHigh - price24hLow)) * 100;
-  $("priceLine").style.left = linePct + "%";
-
-  // la barra “segue” la linea gialla
-  $("priceBar").style.width = Math.abs(linePct - 50) + "%";
-  $("priceBar").style.left = linePct >= 50 ? "50%" : linePct + "%";
-}
 
   // Account animato
   displayedAvailable=lerp(displayedAvailable,availableInj,0.1);
@@ -176,9 +173,10 @@ if(price24hHigh > price24hLow){
   colorNumber($("rewards"),displayedRewards,rewardsInj,7);
   $("rewardsUsd").textContent=`≈ $${(displayedRewards*displayedPrice).toFixed(2)}`;
 
-  // Reward bar (massimo fisso come esempio)
-  $("rewardBar").style.width=Math.min(displayedRewards/0.05*100,100)+"%";
-  $("rewardPercent").textContent=(displayedRewards/0.05*100).toFixed(1)+"%";
+  // Reward bar dinamica (max = 100% dello stake)
+  const rewardPct = stakeInj > 0 ? Math.min(displayedRewards/stakeInj*100,100) : 0;
+  $("rewardBar").style.width = rewardPct + "%";
+  $("rewardPercent").textContent = rewardPct.toFixed(1) + "%";
 
   // APR
   $("apr").textContent=apr.toFixed(2)+"%";
