@@ -108,7 +108,7 @@ const elPriceLine = $("priceLine");
 const elRewardBar = $("rewardBar");
 const elRewardPercent = $("rewardPercent");
 
-/* Chart badge top-right */
+/* Badge top-right */
 const elChartBadge = $("chartBadge");
 const elChartBadgeTime = $("chartBadgeTime");
 const elChartBadgePrice = $("chartBadgePrice");
@@ -124,12 +124,7 @@ let wsKlineOnline = false;
 let lastRestOkAt = 0;
 let lastPrice = 0;
 
-let price24h = {
-  changePercent: 0,
-  high: 0,
-  low: 0,
-  open: 0,
-};
+let price24h = { changePercent:0, high:0, low:0, open:0 };
 
 let chart = null;
 let chartData = []; // [{t, c}]
@@ -161,7 +156,7 @@ function connectTradeWS(){
       const dir = (lastPrice && p < lastPrice) ? "down" : "up";
       lastPrice = p;
 
-      // Price card resta realtime
+      // SOLO questa è realtime (card prezzo). Il grafico NON mostra prezzo realtime fisso.
       tweenNumber(elPrice, p, 4);
       elPrice.classList.toggle("up", dir === "up");
       elPrice.classList.toggle("down", dir === "down");
@@ -194,9 +189,8 @@ function connectKlineWS(){
       if(!t || !close) return;
 
       const last = chartData[chartData.length - 1];
-      if(last && last.t === t){
-        last.c = close;
-      }else{
+      if(last && last.t === t) last.c = close;
+      else{
         chartData.push({ t, c: close });
         if(chartData.length > 288) chartData.shift();
       }
@@ -239,10 +233,7 @@ async function fetchChartHistory(){
   const arr = await r.json();
 
   chartData = arr.map(k => ({ t: k[0], c: safe(k[4]) })).filter(x => x.c > 0);
-
-  if(arr.length){
-    price24h.open = safe(arr[0][1]);
-  }
+  if(arr.length) price24h.open = safe(arr[0][1]);
 
   lastRestOkAt = nowMs();
 
@@ -251,7 +242,7 @@ async function fetchChartHistory(){
   setConnection(allOnline());
 }
 
-/* ================= CHART BADGE (top-right) ================= */
+/* ================= CHART BADGE (only interaction) ================= */
 function badgeShow(){
   if(!elChartBadge) return;
   elChartBadge.classList.remove("hidden");
@@ -263,7 +254,6 @@ function badgeHide(){
   elChartBadge.setAttribute("aria-hidden", "true");
 }
 function badgeSet(timeMs, price){
-  if(!elChartBadgeTime || !elChartBadgePrice) return;
   elChartBadgeTime.textContent = fmtHHMM(timeMs);
   elChartBadgePrice.textContent = `$${safe(price).toFixed(4)}`;
 }
@@ -277,18 +267,13 @@ function nearestPointFromEvent(evt){
   const idx = points[0].index;
   const p = chartData[idx];
   if(!p) return null;
-
   return { t: p.t, c: p.c };
 }
 
 function bindBadgeEvents(canvas){
-  if(!canvas) return;
-
   const onMove = (evt) => {
     const p = nearestPointFromEvent(evt);
-    if(!p) { badgeHide(); return; }
-
-    // Mostra il punto selezionato (NON realtime)
+    if(!p){ badgeHide(); return; }
     badgeSet(p.t, p.c);
     badgeShow();
   };
@@ -331,11 +316,19 @@ function buildOrUpdateChart(soft=false){
         responsive: true,
         maintainAspectRatio: false,
         animation: soft ? false : { duration: 450 },
+
+        // DISATTIVO tooltip Chart.js in modo “hard”
         plugins: {
           legend: { display: false },
-          tooltip: { enabled: false }
+          tooltip: {
+            enabled: false,
+            external: () => {} // evita qualsiasi render esterno
+          }
         },
+
         interaction: { mode: "nearest", intersect: false },
+        events: ["mousemove","mouseout","touchstart","touchmove","touchend","touchcancel"],
+
         scales: {
           x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
           y: {
