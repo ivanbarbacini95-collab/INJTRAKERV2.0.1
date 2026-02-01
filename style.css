@@ -53,22 +53,24 @@ body {
   font-weight: bold;
 }
 
+/* pallino + pulse ripristinati */
 .status-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ef4444;
+  background: #ef4444; /* offline base */
   animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.8; }
+  0% { transform: scale(1); opacity: 0.75; }
+  50% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.75; }
 }
 
 .status-text { color: #f9fafb; }
 
+/* Stati reali online/offline */
 .connection-status.online .status-dot {
   background: #22c55e;
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
@@ -219,34 +221,35 @@ body {
   height: 100% !important;
 }
 
-/* Tooltip PRO */
-.chart-tip {
-  position: absolute;
-  min-width: 140px;
+/* Badge top-right (solo interazione) */
+.chart-badge{
+  position:absolute;
+  top: 12px;
+  right: 12px;
+  min-width: 150px;
   padding: 10px 12px;
   border-radius: 12px;
   background: rgba(0,0,0,.62);
   border: 1px solid rgba(255,255,255,.10);
   backdrop-filter: blur(10px);
   box-shadow: 0 16px 30px rgba(0,0,0,.45);
-  pointer-events: none;
+  pointer-events:none;
   z-index: 6;
-  transform: translate3d(0,0,0);
 }
 
-.chart-tip.hidden {
-  opacity: 0;
-  transform: translate3d(0,-6px,0);
+.chart-badge.hidden{
+  opacity:0;
+  transform: translateY(-6px);
   transition: opacity .14s ease, transform .14s ease;
 }
 
-.chart-tip:not(.hidden) {
-  opacity: 1;
-  transform: translate3d(0,0,0);
+.chart-badge:not(.hidden){
+  opacity:1;
+  transform: translateY(0);
   transition: opacity .14s ease, transform .14s ease;
 }
 
-.chart-tip-row{
+.chart-badge-line{
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -254,16 +257,15 @@ body {
   margin: 2px 0;
 }
 
-.chart-tip-label{
-  font-size: .72rem;
+.chart-badge .k{
+  font-size:.72rem;
   color: rgba(156,163,175,.95);
-  letter-spacing: .2px;
 }
 
-.chart-tip-value{
-  font-size: .9rem;
-  font-weight: 800;
-  color: #f9fafb;
+.chart-badge .v{
+  font-size:.9rem;
+  font-weight:800;
+  color:#f9fafb;
 }
 
 /* MISC */
