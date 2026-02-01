@@ -96,7 +96,6 @@ const elRewards = $("rewards");
 const elRewardsUsd = $("rewardsUsd");
 
 const elApr = $("apr");
-
 const elUpdated = $("updated");
 
 const elPriceMin = $("priceMin");
@@ -109,11 +108,10 @@ const elPriceLine = $("priceLine");
 const elRewardBar = $("rewardBar");
 const elRewardPercent = $("rewardPercent");
 
-/* Tooltip PRO chart */
-const elChartCard = $("chartCard");
-const elChartTip = $("chartTip");
-const elChartTipTime = $("chartTipTime");
-const elChartTipPrice = $("chartTipPrice");
+/* Chart badge top-right */
+const elChartBadge = $("chartBadge");
+const elChartBadgeTime = $("chartBadgeTime");
+const elChartBadgePrice = $("chartBadgePrice");
 
 /* ================= STATE ================= */
 let address = "";
@@ -163,7 +161,7 @@ function connectTradeWS(){
       const dir = (lastPrice && p < lastPrice) ? "down" : "up";
       lastPrice = p;
 
-      // prezzo LIVE (card in alto) resta live, ma il tooltip “pro” mostra il punto selezionato
+      // Price card resta realtime
       tweenNumber(elPrice, p, 4);
       elPrice.classList.toggle("up", dir === "up");
       elPrice.classList.toggle("down", dir === "down");
@@ -253,53 +251,23 @@ async function fetchChartHistory(){
   setConnection(allOnline());
 }
 
-/* ================= CHART TOOLTIP “PRO” ================= */
-function tipShow(){
-  if(!elChartTip) return;
-  elChartTip.classList.remove("hidden");
-  elChartTip.setAttribute("aria-hidden", "false");
+/* ================= CHART BADGE (top-right) ================= */
+function badgeShow(){
+  if(!elChartBadge) return;
+  elChartBadge.classList.remove("hidden");
+  elChartBadge.setAttribute("aria-hidden", "false");
 }
-function tipHide(){
-  if(!elChartTip) return;
-  elChartTip.classList.add("hidden");
-  elChartTip.setAttribute("aria-hidden", "true");
+function badgeHide(){
+  if(!elChartBadge) return;
+  elChartBadge.classList.add("hidden");
+  elChartBadge.setAttribute("aria-hidden", "true");
 }
-
-function tipSetContent(timeMs, price){
-  if(!elChartTipTime || !elChartTipPrice) return;
-  elChartTipTime.textContent = fmtHHMM(timeMs);
-  elChartTipPrice.textContent = `$${safe(price).toFixed(4)}`;
-}
-
-/*
-  Posiziona il tooltip vicino al cursore, ma:
-  - resta dentro la card
-  - non esce dai bordi
-*/
-function tipMoveTo(clientX, clientY){
-  if(!elChartTip || !elChartCard) return;
-
-  const cardRect = elChartCard.getBoundingClientRect();
-  const tipRect = elChartTip.getBoundingClientRect();
-
-  const padding = 10;
-  const offset = 14;
-
-  // coordinate relative alla card
-  let x = clientX - cardRect.left + offset;
-  let y = clientY - cardRect.top - tipRect.height - offset;
-
-  // clamp dentro la card
-  x = clamp(x, padding, cardRect.width - tipRect.width - padding);
-  y = clamp(y, padding, cardRect.height - tipRect.height - padding);
-
-  elChartTip.style.left = `${Math.round(x)}px`;
-  elChartTip.style.top  = `${Math.round(y)}px`;
+function badgeSet(timeMs, price){
+  if(!elChartBadgeTime || !elChartBadgePrice) return;
+  elChartBadgeTime.textContent = fmtHHMM(timeMs);
+  elChartBadgePrice.textContent = `$${safe(price).toFixed(4)}`;
 }
 
-/*
-  Trova il punto più vicino (indice) usando Chart.js mode=nearest
-*/
 function nearestPointFromEvent(evt){
   if(!chart || !chartData.length) return null;
 
@@ -310,41 +278,32 @@ function nearestPointFromEvent(evt){
   const p = chartData[idx];
   if(!p) return null;
 
-  return { idx, t: p.t, c: p.c };
+  return { t: p.t, c: p.c };
 }
 
-function bindProTooltip(canvas){
+function bindBadgeEvents(canvas){
   if(!canvas) return;
 
   const onMove = (evt) => {
     const p = nearestPointFromEvent(evt);
-    if(!p){ tipHide(); return; }
+    if(!p) { badgeHide(); return; }
 
-    // mostra SOLO punto selezionato (non live)
-    tipSetContent(p.t, p.c);
-    tipShow();
-
-    // posizionamento “pro”
-    if(evt.touches && evt.touches[0]){
-      tipMoveTo(evt.touches[0].clientX, evt.touches[0].clientY);
-    }else{
-      tipMoveTo(evt.clientX, evt.clientY);
-    }
+    // Mostra il punto selezionato (NON realtime)
+    badgeSet(p.t, p.c);
+    badgeShow();
   };
 
-  const onLeave = () => tipHide();
+  const onLeave = () => badgeHide();
 
-  // Desktop
   canvas.addEventListener("mousemove", onMove);
   canvas.addEventListener("mouseleave", onLeave);
 
-  // Mobile
   canvas.addEventListener("touchstart", onMove, { passive: true });
   canvas.addEventListener("touchmove", onMove, { passive: true });
   canvas.addEventListener("touchend", onLeave);
   canvas.addEventListener("touchcancel", onLeave);
 
-  tipHide();
+  badgeHide();
 }
 
 /* ================= CHART.JS ================= */
@@ -374,12 +333,9 @@ function buildOrUpdateChart(soft=false){
         animation: soft ? false : { duration: 450 },
         plugins: {
           legend: { display: false },
-          tooltip: { enabled: false } // disabilito tooltip standard
+          tooltip: { enabled: false }
         },
-        interaction: {
-          mode: "nearest",
-          intersect: false
-        },
+        interaction: { mode: "nearest", intersect: false },
         scales: {
           x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
           y: {
@@ -390,8 +346,7 @@ function buildOrUpdateChart(soft=false){
       }
     });
 
-    // bind tooltip pro una sola volta
-    bindProTooltip(canvas);
+    bindBadgeEvents(canvas);
     return;
   }
 
@@ -567,7 +522,7 @@ async function boot(){
 
   setConnection(false);
   elUpdated.textContent = "Last update: --:--";
-  tipHide();
+  badgeHide();
 }
 
 boot();
