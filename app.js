@@ -13,7 +13,6 @@ const CHART_SYNC_MS = 60000;
 
 const INJ_DECIMALS = 18;
 
-/* “scorrimento” iniziale più lungo */
 const INITIAL_SETTLE_TIME = 3200;
 let settleStart = Date.now();
 
@@ -110,10 +109,11 @@ const elPriceLine = $("priceLine");
 const elRewardBar = $("rewardBar");
 const elRewardPercent = $("rewardPercent");
 
-/* Hover badge grafico */
-const elChartHover = $("chartHover");
-const elChartHoverTime = $("chartHoverTime");
-const elChartHoverPrice = $("chartHoverPrice");
+/* Tooltip PRO chart */
+const elChartCard = $("chartCard");
+const elChartTip = $("chartTip");
+const elChartTipTime = $("chartTipTime");
+const elChartTipPrice = $("chartTipPrice");
 
 /* ================= STATE ================= */
 let address = "";
@@ -124,7 +124,6 @@ let wsTradeOnline = false;
 let wsKlineOnline = false;
 
 let lastRestOkAt = 0;
-
 let lastPrice = 0;
 
 let price24h = {
@@ -164,6 +163,7 @@ function connectTradeWS(){
       const dir = (lastPrice && p < lastPrice) ? "down" : "up";
       lastPrice = p;
 
+      // prezzo LIVE (card in alto) resta live, ma il tooltip “pro” mostra il punto selezionato
       tweenNumber(elPrice, p, 4);
       elPrice.classList.toggle("up", dir === "up");
       elPrice.classList.toggle("down", dir === "down");
@@ -253,45 +253,98 @@ async function fetchChartHistory(){
   setConnection(allOnline());
 }
 
-/* ================= CHART HOVER BADGE ================= */
-function showChartHover(timeLabel, priceValue){
-  if(!elChartHover) return;
-  elChartHoverTime.textContent = timeLabel;
-  elChartHoverPrice.textContent = `$${safe(priceValue).toFixed(4)}`;
-  elChartHover.classList.remove("hidden");
+/* ================= CHART TOOLTIP “PRO” ================= */
+function tipShow(){
+  if(!elChartTip) return;
+  elChartTip.classList.remove("hidden");
+  elChartTip.setAttribute("aria-hidden", "false");
+}
+function tipHide(){
+  if(!elChartTip) return;
+  elChartTip.classList.add("hidden");
+  elChartTip.setAttribute("aria-hidden", "true");
 }
 
-function hideChartHover(){
-  if(!elChartHover) return;
-  elChartHover.classList.add("hidden");
+function tipSetContent(timeMs, price){
+  if(!elChartTipTime || !elChartTipPrice) return;
+  elChartTipTime.textContent = fmtHHMM(timeMs);
+  elChartTipPrice.textContent = `$${safe(price).toFixed(4)}`;
 }
 
-function bindChartHoverEvents(canvas){
+/*
+  Posiziona il tooltip vicino al cursore, ma:
+  - resta dentro la card
+  - non esce dai bordi
+*/
+function tipMoveTo(clientX, clientY){
+  if(!elChartTip || !elChartCard) return;
+
+  const cardRect = elChartCard.getBoundingClientRect();
+  const tipRect = elChartTip.getBoundingClientRect();
+
+  const padding = 10;
+  const offset = 14;
+
+  // coordinate relative alla card
+  let x = clientX - cardRect.left + offset;
+  let y = clientY - cardRect.top - tipRect.height - offset;
+
+  // clamp dentro la card
+  x = clamp(x, padding, cardRect.width - tipRect.width - padding);
+  y = clamp(y, padding, cardRect.height - tipRect.height - padding);
+
+  elChartTip.style.left = `${Math.round(x)}px`;
+  elChartTip.style.top  = `${Math.round(y)}px`;
+}
+
+/*
+  Trova il punto più vicino (indice) usando Chart.js mode=nearest
+*/
+function nearestPointFromEvent(evt){
+  if(!chart || !chartData.length) return null;
+
+  const points = chart.getElementsAtEventForMode(evt, "nearest", { intersect: false }, true);
+  if(!points || !points.length) return null;
+
+  const idx = points[0].index;
+  const p = chartData[idx];
+  if(!p) return null;
+
+  return { idx, t: p.t, c: p.c };
+}
+
+function bindProTooltip(canvas){
   if(!canvas) return;
 
-  const updateFromEvent = (evt) => {
-    if(!chart || !chartData.length) return;
+  const onMove = (evt) => {
+    const p = nearestPointFromEvent(evt);
+    if(!p){ tipHide(); return; }
 
-    const points = chart.getElementsAtEventForMode(evt, "nearest", { intersect: false }, true);
-    if(!points || !points.length){
-      hideChartHover();
-      return;
+    // mostra SOLO punto selezionato (non live)
+    tipSetContent(p.t, p.c);
+    tipShow();
+
+    // posizionamento “pro”
+    if(evt.touches && evt.touches[0]){
+      tipMoveTo(evt.touches[0].clientX, evt.touches[0].clientY);
+    }else{
+      tipMoveTo(evt.clientX, evt.clientY);
     }
-
-    const idx = points[0].index;
-    const p = chartData[idx];
-    if(!p){ hideChartHover(); return; }
-
-    showChartHover(fmtHHMM(p.t), p.c);
   };
 
-  canvas.addEventListener("mousemove", updateFromEvent);
-  canvas.addEventListener("mouseleave", hideChartHover);
+  const onLeave = () => tipHide();
 
-  canvas.addEventListener("touchstart", (e) => updateFromEvent(e), { passive: true });
-  canvas.addEventListener("touchmove", (e) => updateFromEvent(e), { passive: true });
-  canvas.addEventListener("touchend", hideChartHover);
-  canvas.addEventListener("touchcancel", hideChartHover);
+  // Desktop
+  canvas.addEventListener("mousemove", onMove);
+  canvas.addEventListener("mouseleave", onLeave);
+
+  // Mobile
+  canvas.addEventListener("touchstart", onMove, { passive: true });
+  canvas.addEventListener("touchmove", onMove, { passive: true });
+  canvas.addEventListener("touchend", onLeave);
+  canvas.addEventListener("touchcancel", onLeave);
+
+  tipHide();
 }
 
 /* ================= CHART.JS ================= */
@@ -321,7 +374,11 @@ function buildOrUpdateChart(soft=false){
         animation: soft ? false : { duration: 450 },
         plugins: {
           legend: { display: false },
-          tooltip: { enabled: false } // usiamo solo il badge custom
+          tooltip: { enabled: false } // disabilito tooltip standard
+        },
+        interaction: {
+          mode: "nearest",
+          intersect: false
         },
         scales: {
           x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
@@ -333,8 +390,8 @@ function buildOrUpdateChart(soft=false){
       }
     });
 
-    hideChartHover();
-    bindChartHoverEvents(canvas);
+    // bind tooltip pro una sola volta
+    bindProTooltip(canvas);
     return;
   }
 
@@ -376,10 +433,7 @@ function updatePriceBarAndLine(){
   const openX = openPos * w;
   const barW = (widthPct / 100) * w;
 
-  let leftPx;
-  if(isUp) leftPx = openX;
-  else leftPx = openX - barW;
-
+  let leftPx = isUp ? openX : (openX - barW);
   leftPx = clamp(leftPx, 0, Math.max(0, w - barW));
   elPriceBar.style.left = `${Math.round(leftPx)}px`;
 }
@@ -513,7 +567,7 @@ async function boot(){
 
   setConnection(false);
   elUpdated.textContent = "Last update: --:--";
-  hideChartHover();
+  tipHide();
 }
 
 boot();
