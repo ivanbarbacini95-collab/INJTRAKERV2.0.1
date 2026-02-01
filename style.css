@@ -57,7 +57,7 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #ef4444; /* offline iniziale */
+  background: #ef4444;
   animation: pulse 1.5s infinite;
 }
 
@@ -69,7 +69,6 @@ body {
 
 .status-text { color: #f9fafb; }
 
-/* Stati reali online/offline */
 .connection-status.online .status-dot {
   background: #22c55e;
   box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
@@ -146,8 +145,6 @@ body {
   height: 100%;
   transition: width 0.35s ease, left 0.35s ease, background 0.35s ease;
   border-radius: 0.3rem;
-
-  /* default neutro */
   width: 50%;
   left: 25%;
   background: #374151;
@@ -222,54 +219,57 @@ body {
   height: 100% !important;
 }
 
-/* Hover badge top-right (compare solo su interazione) */
-.chart-hover {
+/* Tooltip PRO */
+.chart-tip {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(0,0,0,.55);
+  min-width: 140px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0,0,0,.62);
   border: 1px solid rgba(255,255,255,.10);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 30px rgba(0,0,0,.45);
   pointer-events: none;
-  z-index: 5;
+  z-index: 6;
+  transform: translate3d(0,0,0);
 }
 
-.chart-hover.hidden {
+.chart-tip.hidden {
   opacity: 0;
-  transform: translateY(-6px);
-  transition: opacity .16s ease, transform .16s ease;
+  transform: translate3d(0,-6px,0);
+  transition: opacity .14s ease, transform .14s ease;
 }
 
-.chart-hover:not(.hidden) {
+.chart-tip:not(.hidden) {
   opacity: 1;
-  transform: translateY(0);
-  transition: opacity .16s ease, transform .16s ease;
+  transform: translate3d(0,0,0);
+  transition: opacity .14s ease, transform .14s ease;
 }
 
-#chartHoverTime {
-  font-size: 0.75rem;
-  color: #9ca3af;
-  line-height: 1;
+.chart-tip-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin: 2px 0;
 }
 
-#chartHoverPrice {
-  font-size: 0.95rem;
+.chart-tip-label{
+  font-size: .72rem;
+  color: rgba(156,163,175,.95);
+  letter-spacing: .2px;
+}
+
+.chart-tip-value{
+  font-size: .9rem;
   font-weight: 800;
   color: #f9fafb;
-  line-height: 1.1;
 }
 
 /* MISC */
 .up { color: #22c55e; }
 .down { color: #ef4444; }
 
-/* micro pulse numeri */
 .pulse-up { animation: pulseUp .35s ease; }
 .pulse-down { animation: pulseDown .35s ease; }
 
