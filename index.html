@@ -28,6 +28,7 @@
 
   <div class="cards-wrapper">
 
+    <!-- PRICE CARD (realtime) -->
     <div class="card price-card">
       <div class="label">INJ Price</div>
       <div class="value-row"><span id="price">0.0000</span></div>
@@ -73,18 +74,19 @@
       <div class="value-row"><span id="apr">0%</span></div>
     </div>
 
+    <!-- CHART CARD (no realtime number; only on interaction) -->
     <div class="card chart-card" id="chartCard">
       <div class="label">24h Price Chart</div>
 
-      <!-- Tooltip PRO custom (segue cursore / touch) -->
-      <div id="chartTip" class="chart-tip hidden" aria-hidden="true">
-        <div class="chart-tip-row">
-          <span class="chart-tip-label">Time</span>
-          <span id="chartTipTime" class="chart-tip-value">--:--</span>
+      <!-- Badge top-right (only when interacting) -->
+      <div id="chartBadge" class="chart-badge hidden" aria-hidden="true">
+        <div class="chart-badge-line">
+          <span class="k">Time</span>
+          <span id="chartBadgeTime" class="v">--:--</span>
         </div>
-        <div class="chart-tip-row">
-          <span class="chart-tip-label">Price</span>
-          <span id="chartTipPrice" class="chart-tip-value">$0.0000</span>
+        <div class="chart-badge-line">
+          <span class="k">Price</span>
+          <span id="chartBadgePrice" class="v">$0.0000</span>
         </div>
       </div>
 
